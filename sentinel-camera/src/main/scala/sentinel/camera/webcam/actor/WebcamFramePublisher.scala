@@ -15,6 +15,7 @@ import scala.util.Try
   *
   * @param grabber   webcamera frame grabber
   * @param throttler TimerBasedThrottler for flow control
+  * @deprecated since it's low level api
   */
 class WebcamFramePublisher(grabber: FrameGrabber,
                            throttler: ActorRef)
@@ -51,9 +52,9 @@ class WebcamFramePublisher(grabber: FrameGrabber,
   private def emitFrames(): Unit = synchronized {
     if (isActive && totalDemand > 0) {
       grabFrame().foreach(onNext)
-//      if (totalDemand > 0) {
-//        throttler ! Continue
-//      }
+      //      if (totalDemand > 0) {
+      //        throttler ! Continue
+      //      }
     }
   }
 

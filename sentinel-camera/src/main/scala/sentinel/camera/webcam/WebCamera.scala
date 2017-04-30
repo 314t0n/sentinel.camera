@@ -35,7 +35,7 @@ object WebCamera {
               dimensions: Dimensions,
               bitsPerPixel: Int = CV_8U,
               imageMode: ImageMode = ImageMode.COLOR,
-              framePerSec: Int = DefaultFrameRate
+              @deprecated framePerSec: Int = DefaultFrameRate
             )(implicit system: ActorSystem): Source[Frame, NotUsed] = {
 
     lazy val grabber = buildGrabber(
@@ -48,18 +48,18 @@ object WebCamera {
 
     val frameRate = (OneSecond / framePerSec) * MillisecondsPerSecond
 
-    val throttler = system.actorOf(Props(
-      classOf[TimerBasedThrottler],
-      1 msgsPer frameRate.millisecond))
+//    val throttler = system.actorOf(Props(
+//      classOf[TimerBasedThrottler],
+//      1 msgsPer frameRate.millisecond))
 
-    val props = Props(new WebcamFramePublisher(grabber, throttler))
-    val webcamActorRef = system.actorOf(props)
-    val webcamActorPublisher = ActorPublisher[Frame](webcamActorRef)
+//    val props = Props(new WebcamFramePublisher(grabber, throttler))
+//    val webcamActorRef = system.actorOf(props)
+//    val webcamActorPublisher = ActorPublisher[Frame](webcamActorRef)
 
-    Source.fromPublisher(webcamActorPublisher)
+    val we = new WebcamStage(grabber)
+    Source.fromGraph(we)
   }
 
-  //TODO make it testable
   private def buildGrabber(deviceId: Int,
                            imageWidth: Int,
                            imageHeight: Int,
