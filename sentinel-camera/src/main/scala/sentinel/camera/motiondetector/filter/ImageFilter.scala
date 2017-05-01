@@ -1,4 +1,4 @@
-package sentinel.camera.motiondetect.filter
+package sentinel.camera.motiondetector.filter
 
 import org.bytedeco.javacpp.opencv_core.Mat
 

@@ -1,7 +1,8 @@
-package sentinel.camera.motiondetect.bgsubtractor
+package sentinel.camera.motiondetector.bgsubtractor
 
+import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacpp.opencv_core._
-import org.bytedeco.javacpp.opencv_video.createBackgroundSubtractorMOG2
+import org.bytedeco.javacpp.opencv_video.{BackgroundSubtractorMOG2, createBackgroundSubtractorMOG2}
 import sentinel.camera.webcam.CameraFrame
 
 import scala.util.Try
@@ -21,12 +22,13 @@ import scala.util.Try
 class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
                                                 threshold: Int = 20,
                                                 shadowDetect: Boolean = false)
-  extends BackgroundSubstractor {
+  extends BackgroundSubstractor
+    with LazyLogging {
 
-  //  private val backgroundSubtractorMOG2: BackgroundSubtractorMOG2 =
-  //    createBackgroundSubtractorMOG2(lengthOfHistory, threshold, shadowDetect)
-  //  private val learningRate = 1.0 / lengthOfHistory
-  //  private val mask: Mat = new Mat()
+  private val backgroundSubtractorMOG2: BackgroundSubtractorMOG2 =
+    createBackgroundSubtractorMOG2(lengthOfHistory, threshold, shadowDetect)
+  private val learningRate = 1.0 / lengthOfHistory
+  private val mask: Mat = new Mat()
   //
   //  def grayFilter(frame: Mat): Mat = {
   //    val grayFrame = new Mat()
@@ -35,17 +37,11 @@ class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
   //  }
 
   def subtractBackground(source: IplImage): IplImage = {
-    val mtx = new Mat(source)
-    val sourceSingle = cvCreateImage(cvGetSize(source), IPL_DEPTH_8U, 1)
-    val fgMask = new Mat(sourceSingle)
-    val backgroundSubtractorMOG2 = createBackgroundSubtractorMOG2
-    backgroundSubtractorMOG2.apply(mtx, fgMask)
-    val img = new IplImage(fgMask)
-    sourceSingle.release()
-    mtx.release()
-    fgMask.release()
-    backgroundSubtractorMOG2.close()
-    img
+    val currentFrame = new Mat(source)
+    backgroundSubtractorMOG2.apply(currentFrame, mask, learningRate)
+    val maskedImage = new IplImage(mask)
+    currentFrame.release()
+    maskedImage
   }
 
   //  private val structuringElement: Mat = getStructuringElement(MORPH_RECT, new Size(5, 5)) // todo parameter
@@ -59,7 +55,7 @@ class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
   override def substractBackground(frame: CameraFrame): CameraFrame = {
     Try(CameraFrame(subtractBackground(frame.image))) recover {
       case e: Exception => {
-        println("GMB " + e)
+        logger.error("Error while substracting background. ", e)
         new CameraFrame(new IplImage())
       }
     } get
@@ -67,5 +63,10 @@ class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
     //    backgroundSubtractorMOG2.apply(toMat(frame.image), mask, learningRate)
     //    val mat = grayFilter(edgeFilter(mask))
     //    frame
+  }
+
+  override def close(): Unit = {
+    backgroundSubtractorMOG2.close()
+    mask.release()
   }
 }

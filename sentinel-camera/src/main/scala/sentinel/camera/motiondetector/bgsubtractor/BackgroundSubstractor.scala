@@ -1,4 +1,4 @@
-package sentinel.camera.motiondetect.bgsubtractor
+package sentinel.camera.motiondetector.bgsubtractor
 
 import org.bytedeco.javacpp.opencv_core.{IplImage, Mat}
 import sentinel.camera.webcam.CameraFrame
@@ -8,6 +8,6 @@ object BackgroundSubstractor{
   def toIplImage(mat: Mat) = new IplImage(mat)
 }
 
-trait BackgroundSubstractor {
+trait BackgroundSubstractor extends AutoCloseable {
   def substractBackground(frame: CameraFrame): CameraFrame
 }

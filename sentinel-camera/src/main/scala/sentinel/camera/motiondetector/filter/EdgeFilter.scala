@@ -1,4 +1,4 @@
-package sentinel.camera.motiondetect.filter
+package sentinel.camera.motiondetector.filter
 
 import org.bytedeco.javacpp.opencv_core.{Mat, Size}
 import org.bytedeco.javacpp.opencv_imgproc.{MORPH_OPEN, MORPH_RECT, getStructuringElement, morphologyEx}

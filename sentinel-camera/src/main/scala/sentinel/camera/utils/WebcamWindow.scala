@@ -4,16 +4,17 @@ import java.time.LocalDateTime
 
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, RunnableGraph, Sink, Source}
+import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.{CanvasFrame, Frame, OpenCVFrameConverter}
-import sentinel.camera.motiondetect.MotionDetectStage
-import sentinel.camera.motiondetect.bgsubtractor.GaussianMixtureBasedBackgroundSubstractor
+import sentinel.camera.motiondetector.MotionDetectStage
+import sentinel.camera.motiondetector.bgsubtractor.GaussianMixtureBasedBackgroundSubstractor
 import sentinel.camera.webcam.{CameraFrame, WebCamera}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-object WebcamWindow extends App {
+object WebcamWindow extends App with LazyLogging {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer(
@@ -24,9 +25,11 @@ object WebcamWindow extends App {
 
   import system.dispatcher
 
-  val canvas = new CanvasFrame("Webcam")
+  val motionCanvas = new CanvasFrame("Masked")
+  val normalCanvas = new CanvasFrame("Webcam")
   //  Set Canvas frame to close on exit
-  canvas.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE)
+  motionCanvas.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE)
+  normalCanvas.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE)
 
   val imageDimensions = Dimensions(width = 640, height = 320)
   val webcamSource = WebCamera.source(deviceId = 0, dimensions = imageDimensions, framePerSec = 30)
@@ -38,12 +41,12 @@ object WebcamWindow extends App {
   val graph = RunnableGraph.fromGraph(GraphDSL.create() {
     implicit builder =>
       import GraphDSL.Implicits._
-      // TODO naming
+
       val motionDetectStage = new MotionDetectStage()
       val converter = new OpenCVFrameConverter.ToIplImage()
       val substractor = new GaussianMixtureBasedBackgroundSubstractor()
-      //      val MotionDetect: FlowShape[IplImage, IplImage] = builder.add(new MotionDetectStage())
-      val ToIplImage: FlowShape[Frame, CameraFrame] = builder.add(Flow[Frame]
+
+      val IplImageConverter: FlowShape[Frame, CameraFrame] = builder.add(Flow[Frame]
         .via(killSwitch.flow)
         .map(converter.convert)
         .map(f => CameraFrame(f)))
@@ -53,63 +56,56 @@ object WebcamWindow extends App {
         .map(substractor.substractBackground)
       //        .map(f => edgeFilter.filter(f))
       //        .map(f => grayFilter.filter(f))
-      //
       val showFrame = Flow[CameraFrame].via(killSwitch.flow)
-        //        .map(f => f.image)
         .map(f => {
-        val img = converter.convert(f.image)
-        (f, img)
-      })
+          val img = converter.convert(f.image)
+          (f, img)
+        })
         .map(f => {
-          canvas.showImage(f._2)
+          normalCanvas.showImage(f._2)
           f._1
         })
 
-      val closer = Flow[CameraFrame].map(f => {
-        try {
-          f.image.release()
-        } catch {
-          case e: Exception => {
-            println(e)
-          }
-        }
-      })
+      val showFrameAnotherBah = Flow[CameraFrame].via(killSwitch.flow)
+        .map(f => {
+          val img = converter.convert(f.image)
+          (f, img)
+        })
+        .map(f => {
+          motionCanvas.showImage(f._2)
+          f._1
+        })
 
       val WebCam: Outlet[Frame] = builder.add(webcamSource).out
-      val ShowFrame: FlowShape[CameraFrame, CameraFrame] = builder.add(showFrame)
-      //      val MotionDetector: FlowShape[CameraFrame, CameraFrame] = builder.add(motionDetectFlow)
-
+      val ShowNormalImage: FlowShape[CameraFrame, CameraFrame] = builder.add(showFrame)
+      val ShowMaskedImage: FlowShape[CameraFrame, CameraFrame] = builder.add(showFrameAnotherBah)
       val MotionDetector: FlowShape[CameraFrame, CameraFrame] = builder.add(motionDetectStage)
-
-      //      val SourceClose1: FlowShape[CameraFrame, Unit] = builder.add(closer)
-      //      val SourceClose2: FlowShape[CameraFrame, Unit] = builder.add(closer)
-      //      val bcast = builder.add(Broadcast[CameraFrame](2))
+      val bcast = builder.add(Broadcast[CameraFrame](2))
       //      val merge = builder.add(Zip[CameraFrame, CameraFrame])
       val E: Inlet[Any] = builder.add(Sink.ignore).in
+      val F: Inlet[Any] = builder.add(Sink.ignore).in
 
       val stream = WebCam
         .via(killSwitch.flow)
         .zip(tickingSource)
         .map(_._1)
 
-      //            stream ~> ShowFrame ~> E
-      //            stream ~> ToIplImage ~> MotionDetector ~> ShowFrame ~> SourceClose1 ~> E
-      stream ~> ToIplImage ~> MotionDetector ~> ShowFrame ~> E
-      //      stream ~> ToIplImage ~> bcast.in
-      //      bcast.out(0) ~> SourceClose1 ~> E
-      //      bcast.out(1) ~> MotionDetector ~> E
+      stream ~> IplImageConverter ~> bcast.in
+      bcast.out(0) ~> ShowNormalImage ~> E
+      bcast.out(1) ~> MotionDetector ~> ShowMaskedImage ~> F
 
       ClosedShape
   })
 
-  canvas.addWindowListener(new java.awt.event.WindowAdapter() {
+  normalCanvas.addWindowListener(new java.awt.event.WindowAdapter() {
     override def windowClosing(windowEvent: java.awt.event.WindowEvent): Unit = {
-      println(LocalDateTime.now + " closing window")
+      logger.debug("Closing window.")
       Await.ready(Future {
         killSwitch.shutdown()
-        println(LocalDateTime.now + " shutdown")
+        logger.debug("Shutdown.")
       }, 3.seconds)
     }
   })
+
   graph.run()
 }

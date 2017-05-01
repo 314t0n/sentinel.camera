@@ -1,11 +1,11 @@
-package sentinel.camera.motiondetect
+package sentinel.camera.motiondetector
 
 import akka.stream._
 import akka.stream.stage._
-import sentinel.camera.motiondetect.bgsubtractor.GaussianMixtureBasedBackgroundSubstractor
+import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
 import sentinel.camera.webcam.CameraFrame
 
-class MotionDetectStage extends GraphStage[FlowShape[CameraFrame, CameraFrame]] {
+class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor) extends GraphStage[FlowShape[CameraFrame, CameraFrame]] {
 
   val in = Inlet[CameraFrame]("MotionDetect.in")
   val out = Outlet[CameraFrame]("MotionDetect.out")
@@ -14,10 +14,8 @@ class MotionDetectStage extends GraphStage[FlowShape[CameraFrame, CameraFrame]] 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
 
-      val substractor = new GaussianMixtureBasedBackgroundSubstractor()
-
       private def motionDetect(frame: CameraFrame) = {
-        substractor.substractBackground(frame)
+        backgroundSubstractor.substractBackground(frame)
       }
 
       setHandler(in, new InHandler {
