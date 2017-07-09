@@ -6,6 +6,12 @@ scalaVersion := "2.12.1"
 
 val akkaVersion = "2.4.16"
 
+//javaCppPlatform := Seq("linux-arm")
+
+javaCppPresetLibs ++= Seq(
+  "ffmpeg" -> "3.2.1"
+)
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
@@ -16,7 +22,7 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.1",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "org.mockito" % "mockito-all" % "1.10.19",
-  "org.bytedeco" % "javacv-platform" % "1.3.1",
+  "com.typesafe" % "config" % "1.3.1",
   "ch.qos.logback" % "logback-classic" % "1.1.7",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
 )

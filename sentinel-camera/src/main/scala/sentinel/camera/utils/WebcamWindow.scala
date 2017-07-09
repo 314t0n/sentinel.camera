@@ -1,6 +1,7 @@
 package sentinel.camera.utils
 
 import java.time.LocalDateTime
+import javafx.scene.layout.BackgroundSize
 
 import akka.actor.ActorSystem
 import akka.stream._
@@ -8,14 +9,16 @@ import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, RunnableGraph, Sink, Sou
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.{CanvasFrame, Frame, OpenCVFrameConverter}
 import sentinel.camera.motiondetector.MotionDetectStage
-import sentinel.camera.motiondetector.bgsubtractor.GaussianMixtureBasedBackgroundSubstractor
+import sentinel.camera.motiondetector.bgsubtractor.{BackgroundSubtractorMOG2Factory, GaussianMixtureBasedBackgroundSubstractor}
+import sentinel.camera.utils.settings.PropertyBasedSettingsLoader
+import framegrabber.FFmpegFrameGrabberBuilder
 import sentinel.camera.webcam.{CameraFrame, WebCamera}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 object WebcamWindow extends App with LazyLogging {
-
+  logger.debug("Start up")
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer(
     ActorMaterializerSettings(system)
@@ -32,7 +35,9 @@ object WebcamWindow extends App with LazyLogging {
   normalCanvas.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE)
 
   val imageDimensions = Dimensions(width = 640, height = 320)
-  val webcamSource = WebCamera.source(deviceId = 0, dimensions = imageDimensions, framePerSec = 30)
+
+  val settings = new PropertyBasedSettingsLoader().load()
+  val webcamSource = WebCamera.source(new FFmpegFrameGrabberBuilder(settings))
   // 30 fps => take a picture every 20 ms
   val tickingSource = Source.tick(1.second, 20.millisecond, 0)
   // Shared between flows in order to shutdown the whole graph
@@ -42,9 +47,10 @@ object WebcamWindow extends App with LazyLogging {
     implicit builder =>
       import GraphDSL.Implicits._
 
-      val motionDetectStage = new MotionDetectStage()
+      val mog = BackgroundSubtractorMOG2Factory()
+      val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 1.0)
+      val motionDetectStage = new MotionDetectStage(substractor)
       val converter = new OpenCVFrameConverter.ToIplImage()
-      val substractor = new GaussianMixtureBasedBackgroundSubstractor()
 
       val IplImageConverter: FlowShape[Frame, CameraFrame] = builder.add(Flow[Frame]
         .via(killSwitch.flow)

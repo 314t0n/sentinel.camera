@@ -7,7 +7,7 @@ import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import org.bytedeco.javacv.FrameGrabber
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{OneInstancePerTest, WordSpecLike}
+import org.scalatest.{Ignore, OneInstancePerTest, WordSpecLike}
 import sentinel.camera.webcam.WebcamFramePublisherSpec._
 import sentinel.camera.webcam.actor.WebcamFramePublisher
 import testutils.StopSystemAfterAll
@@ -16,7 +16,7 @@ import testutils.TestSystem.TestActorSystem
 object WebcamFramePublisherSpec{
   private def OneRequest = Request(1)
 }
-
+@Ignore
 class WebcamFramePublisherSpec extends TestKit(ActorSystem(TestActorSystem))
   with WordSpecLike
   with OneInstancePerTest

@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, TestKit}
 import org.bytedeco.javacpp.opencv_core.IplImage
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
-import org.mockito.internal.matchers.Any
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{OneInstancePerTest, WordSpecLike}
 import sentinel.camera.storage.Storage.Save

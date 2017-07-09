@@ -29,8 +29,7 @@ class WebcamStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Frame]] 
       }
 
       override def preStart(): Unit = {
-        // TODO currently the grabber factory starts the grabber
-        //        grabber.start()
+        grabber.start()
         logger.debug("Webcam started")
       }
 

@@ -2,32 +2,22 @@ package sentinel.camera.motiondetector.bgsubtractor
 
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacpp.opencv_core._
-import org.bytedeco.javacpp.opencv_video.{BackgroundSubtractorMOG2, createBackgroundSubtractorMOG2}
+import org.bytedeco.javacpp.opencv_video.BackgroundSubtractorMOG2
 import sentinel.camera.webcam.CameraFrame
 
-import scala.util.Try
-
 /**
-  * Provides motion detector algorithm
+  * Substracts foreground from background
   *
-  * @param lengthOfHistory number of frames used for motion detect
-  * @param threshold       Threshold on the squared Mahalanobis distance between
-  *                        the pixel and the model to decide whether a pixel is well described
-  *                        by the background model. This parameter does not affect the
-  *                        background update.
-  * @param shadowDetect    If true, the algorithm will detect shadows and mark
-  *                        them. It decreases the speed a bit, so if you do not need this
-  *                        feature, set the parameter to false
+  * @param backgroundSubtractorMOG2
+  * @param learningRate
   */
-class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
-                                                threshold: Int = 20,
-                                                shadowDetect: Boolean = false)
+class GaussianMixtureBasedBackgroundSubstractor(backgroundSubtractorMOG2: BackgroundSubtractorMOG2, learningRate: Double)
   extends BackgroundSubstractor
     with LazyLogging {
 
-  private val backgroundSubtractorMOG2: BackgroundSubtractorMOG2 =
-    createBackgroundSubtractorMOG2(lengthOfHistory, threshold, shadowDetect)
-  private val learningRate = 1.0 / lengthOfHistory
+  //  private val backgroundSubtractorMOG2: BackgroundSubtractorMOG2 =
+  //    createBackgroundSubtractorMOG2(lengthOfHistory, threshold, shadowDetect)
+  //  private val learningRate = 1.0 / lengthOfHistory
   private val mask: Mat = new Mat()
   //
   //  def grayFilter(frame: Mat): Mat = {
@@ -36,7 +26,7 @@ class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
   //    grayFrame
   //  }
 
-  def subtractBackground(source: IplImage): IplImage = {
+  private def applyMask(source: IplImage): IplImage = {
     val currentFrame = new Mat(source)
     backgroundSubtractorMOG2.apply(currentFrame, mask, learningRate)
     val maskedImage = new IplImage(mask)
@@ -52,18 +42,8 @@ class GaussianMixtureBasedBackgroundSubstractor(lengthOfHistory: Int = 200,
   //    destionationFrame
   //  }
 
-  override def substractBackground(frame: CameraFrame): CameraFrame = {
-    Try(CameraFrame(subtractBackground(frame.image))) recover {
-      case e: Exception => {
-        logger.error("Error while substracting background. ", e)
-        new CameraFrame(new IplImage())
-      }
-    } get
+  override def substractBackground(frame: CameraFrame): CameraFrame = CameraFrame(applyMask(frame.image))
 
-    //    backgroundSubtractorMOG2.apply(toMat(frame.image), mask, learningRate)
-    //    val mat = grayFilter(edgeFilter(mask))
-    //    frame
-  }
 
   override def close(): Unit = {
     backgroundSubtractorMOG2.close()
