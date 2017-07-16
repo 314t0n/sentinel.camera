@@ -48,9 +48,10 @@ object WebcamWindow extends App with LazyLogging {
       import GraphDSL.Implicits._
 
       val mog = BackgroundSubtractorMOG2Factory()
-      val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 1.0)
+      val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 0.01)
       val motionDetectStage = new MotionDetectStage(substractor)
       val converter = new OpenCVFrameConverter.ToIplImage()
+      val frameConverter = new OpenCVFrameConverter.ToMat()
 
       val IplImageConverter: FlowShape[Frame, CameraFrame] = builder.add(Flow[Frame]
         .via(killSwitch.flow)
@@ -60,8 +61,7 @@ object WebcamWindow extends App with LazyLogging {
       val motionDetectFlow = Flow[CameraFrame].via(killSwitch.flow)
         .buffer(10, OverflowStrategy.backpressure)
         .map(substractor.substractBackground)
-      //        .map(f => edgeFilter.filter(f))
-      //        .map(f => grayFilter.filter(f))
+
       val showFrame = Flow[CameraFrame].via(killSwitch.flow)
         .map(f => {
           val img = converter.convert(f.image)

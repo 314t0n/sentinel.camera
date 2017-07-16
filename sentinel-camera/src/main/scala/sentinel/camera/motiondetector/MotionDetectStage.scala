@@ -2,10 +2,12 @@ package sentinel.camera.motiondetector
 
 import akka.stream._
 import akka.stream.stage._
+import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
 import sentinel.camera.webcam.CameraFrame
 
-class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor) extends GraphStage[FlowShape[CameraFrame, CameraFrame]] {
+class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor)
+  extends GraphStage[FlowShape[CameraFrame, CameraFrame]] with LazyLogging {
 
   val in = Inlet[CameraFrame]("MotionDetect.in")
   val out = Outlet[CameraFrame]("MotionDetect.out")
