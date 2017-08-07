@@ -6,6 +6,7 @@ scalaVersion := "2.12.1"
 
 val akkaVersion = "2.4.16"
 
+// TODO check if it's needed
 //javaCppPlatform := Seq("linux-arm")
 
 javaCppPresetLibs ++= Seq(
@@ -24,5 +25,6 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-all" % "1.10.19",
   "com.typesafe" % "config" % "1.3.1",
   "ch.qos.logback" % "logback-classic" % "1.1.7",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+  "com.google.inject" % "guice" % "4.1.0"
 )

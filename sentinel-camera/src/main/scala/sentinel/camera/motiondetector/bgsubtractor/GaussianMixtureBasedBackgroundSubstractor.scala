@@ -3,14 +3,10 @@ package sentinel.camera.motiondetector.bgsubtractor
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacpp.opencv_core._
 import org.bytedeco.javacpp.opencv_video.BackgroundSubtractorMOG2
-import sentinel.camera.utils.settings.Settings
 import sentinel.camera.webcam.CameraFrame
-
+@deprecated
 object GaussianMixtureBasedBackgroundSubstractor {
-//
-//  def create(mog: BackgroundSubtractorMOG2, settings: Settings): BackgroundSubstractor =
-//    GaussianMixtureBasedBackgroundSubstractor(mog, settings.motionDetectOptions.getOrElse("learningRate", "1.0").toDouble)
-
+  @deprecated
   def apply(mog: BackgroundSubtractorMOG2, learningRate: Double): GaussianMixtureBasedBackgroundSubstractor
   = new GaussianMixtureBasedBackgroundSubstractor(mog, learningRate)
 }

@@ -1,8 +1,10 @@
 package sentinel.camera.motiondetector.bgsubtractor
 
+import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacpp.opencv_video.{BackgroundSubtractorMOG2, createBackgroundSubtractorMOG2}
 
-object BackgroundSubtractorMOG2Factory {
+@deprecated
+object BackgroundSubtractorMOG2Factory extends LazyLogging{
   /**
     *
     * @param lengthOfHistory number of frames used for motion detect
@@ -14,8 +16,10 @@ object BackgroundSubtractorMOG2Factory {
     *                        them. It decreases the speed a bit, so if you do not need this
     *                        feature, set the parameter to false
     */
+  @deprecated
   def apply(lengthOfHistory: Int = 200,
             threshold: Int = 20,
-            shadowDetect: Boolean = false): BackgroundSubtractorMOG2 =
+            shadowDetect: Boolean = false): BackgroundSubtractorMOG2 = {
     createBackgroundSubtractorMOG2(lengthOfHistory, threshold, shadowDetect)
+  }
 }

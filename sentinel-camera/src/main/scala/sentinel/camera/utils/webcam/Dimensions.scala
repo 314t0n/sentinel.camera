@@ -1,4 +1,4 @@
-package sentinel.camera.utils
+package sentinel.camera.utils.webcam
 
 /**
   * Frame width and height in pixels

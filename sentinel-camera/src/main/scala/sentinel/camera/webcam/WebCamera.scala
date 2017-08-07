@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import org.bytedeco.javacv.Frame
-import framegrabber.FrameGrabberBuilder
+import sentinel.camera.framegrabber.FrameGrabberBuilder
 
 object WebCamera {
   /**

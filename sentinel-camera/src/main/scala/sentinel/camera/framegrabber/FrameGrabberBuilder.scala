@@ -1,4 +1,4 @@
-package framegrabber
+package sentinel.camera.framegrabber
 
 import org.bytedeco.javacpp.avutil.AV_PIX_FMT_BGR24
 import org.bytedeco.javacv.{FFmpegFrameGrabber, FrameGrabber}

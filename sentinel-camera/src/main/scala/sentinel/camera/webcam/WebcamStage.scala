@@ -1,12 +1,8 @@
 package sentinel.camera.webcam
 
-import java.time.LocalDateTime
-
 import akka.stream._
 import akka.stream.stage._
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacpp.opencv_core
-import org.bytedeco.javacpp.opencv_core.CvScalar
 import org.bytedeco.javacv.{Frame, FrameGrabber}
 
 import scala.util.Try

@@ -1,6 +1,6 @@
 package sentinel.camera.webcam.framegrabber
 
-import framegrabber.FFmpegFrameGrabberBuilder
+import sentinel.camera.framegrabber.FFmpegFrameGrabberBuilder
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
 import org.scalatest.{BeforeAndAfter, WordSpec}
 import org.scalatest.mockito.MockitoSugar
