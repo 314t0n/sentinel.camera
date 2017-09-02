@@ -16,9 +16,7 @@ class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor)
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
 
-      private def motionDetect(frame: CameraFrame) = {
-        backgroundSubstractor.substractBackground(frame)
-      }
+      private def motionDetect(frame: CameraFrame) = backgroundSubstractor.substractBackground(frame)
 
       setHandler(in, new InHandler {
         override def onPush(): Unit = {
@@ -31,7 +29,6 @@ class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor)
           pull(in)
         }
       })
-
     }
 
   override def shape: FlowShape[CameraFrame, CameraFrame] = motionDetectShape
