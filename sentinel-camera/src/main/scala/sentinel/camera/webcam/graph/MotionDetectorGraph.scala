@@ -1,37 +1,34 @@
 package sentinel.camera.webcam.graph
 
 import akka.NotUsed
-import akka.stream.{ClosedShape, FlowShape, Inlet, SharedKillSwitch}
+import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink}
+import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler}
 import org.bytedeco.javacv.{CanvasFrame, OpenCVFrameConverter}
 import sentinel.camera.motiondetector.MotionDetectStage
 import sentinel.camera.motiondetector.bgsubtractor.{BackgroundSubtractorMOG2Factory, GaussianMixtureBasedBackgroundSubstractor}
 import sentinel.camera.webcam.CameraFrame
-import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
+import sentinel.camera.webcam.graph.CameraReaderGraph.{CameraSource, FrameFlow}
 import sentinel.graph.GraphFactory
+@deprecated
+class MotionDetectorGraph(cameraSource: CameraSource) extends GraphFactory[FrameFlow] {
 
-class MotionDetectorGraph(cameraSource: CameraSource,
-                          canvas: CanvasFrame,
-                          killSwitch: SharedKillSwitch) extends GraphFactory[RunnableGraph[NotUsed]] {
+  override def createGraph() =
+    Flow.fromGraph(GraphDSL.create(cameraSource) {
+      implicit builder =>
+        (source) =>
+          import GraphDSL.Implicits._
 
-  override def createGraph: RunnableGraph[NotUsed] = ???
+          val mog = BackgroundSubtractorMOG2Factory()
+          val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 0.01)
+          val motionDetectStage = new MotionDetectStage(substractor)
+          val converter = new OpenCVFrameConverter.ToIplImage()
 
-  //    RunnableGraph.fromGraph(GraphDSL.create(cameraSource) {
-  //      implicit builder =>
-  //        (source) =>
-  //          import GraphDSL.Implicits._
-  //
-  //          val mog = BackgroundSubtractorMOG2Factory()
-  //          val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 0.01)
-  //          val motionDetectStage = new MotionDetectStage(substractor)
-  //          val converter = new OpenCVFrameConverter.ToIplImage()
-  //
-  //
-  //          val ShowNormalImage: FlowShape[CameraFrame, CameraFrame] = builder.add(showFrame)
-  //          val Ignore: Inlet[Any] = builder.add(Sink.ignore).in
-  //
-  //          source.out ~>  ~> MotionDetector ~> Ignore
-  //
-  //          ClosedShape
-  //    })
+          val MotionDetector: FlowShape[CameraFrame, CameraFrame] = builder.add(motionDetectStage)
+
+          source.out ~> MotionDetector
+
+          FlowShape.of(MotionDetector.in, MotionDetector.out)
+    })
+
 }

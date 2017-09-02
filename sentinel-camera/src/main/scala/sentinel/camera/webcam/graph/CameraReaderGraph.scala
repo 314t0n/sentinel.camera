@@ -11,7 +11,8 @@ import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
 import sentinel.graph.GraphFactory
 
 object CameraReaderGraph {
-  type CameraSource = Source[CameraFrame, NotUsed]
+  type CameraSource = Source[CameraFrame, NotUsed] //framesoource imagesource
+  type FrameFlow = Flow[CameraFrame, CameraFrame, NotUsed]
 }
 
 class CameraReaderGraph(webcamSource: Source[Frame, NotUsed],

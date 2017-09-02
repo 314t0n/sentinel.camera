@@ -5,15 +5,16 @@ import java.awt.event.{WindowAdapter, WindowEvent}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.scaladsl.{BroadcastHub, Flow, GraphDSL, Keep, RunnableGraph, Sink, Source}
+import akka.stream.scaladsl.{BroadcastHub, Flow, GraphDSL, Keep, RunnableGraph, Source}
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.CanvasFrame
-import sentinel.Sandbox.{killSwitch, tickingSource}
 import sentinel.camera.framegrabber.FFmpegFrameGrabberBuilder
+import sentinel.camera.motiondetector.MotionDetectStage
+import sentinel.camera.motiondetector.bgsubtractor.{BackgroundSubtractorMOG2Factory, GaussianMixtureBasedBackgroundSubstractor}
 import sentinel.camera.utils.settings.PropertyFileSettingsLoader
-import sentinel.camera.webcam.WebCamera
 import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
-import sentinel.camera.webcam.graph.{CameraReaderGraph, ShowImageGraph}
+import sentinel.camera.webcam.graph.{CameraReaderGraph, MotionDetectorGraph, ShowImageGraph, ShowImageShape}
+import sentinel.camera.webcam.{CameraFrame, WebCamera}
 import sentinel.graph.GraphFactory
 
 import scala.concurrent.duration._
@@ -56,9 +57,11 @@ object Sandbox2 extends App with LazyLogging {
 
   val fromProducer = new BroadcastingGraph(producer).createGraph().run()
 
-  val processorA = new ShowImageGraph(fromProducer, normalCanvas, killSwitch).createGraph
+  fromProducer.runWith(new ShowImageShape(normalCanvas))
+  val mog = BackgroundSubtractorMOG2Factory()
+  val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 0.01)
 
-  processorA.run()
+  fromProducer.via(new MotionDetectStage(substractor)).runWith(new ShowImageShape(motionCanvas))
 
   class BroadcastingGraph(source: CameraSource)
     extends GraphFactory[RunnableGraph[CameraSource]]
