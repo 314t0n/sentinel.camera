@@ -29,13 +29,15 @@ class WebcamStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Frame]] 
         logger.debug("Webcam started")
       }
 
-      private def grabFrame(): Try[Option[Frame]] =
+      private def grabFrame(): Try[Option[Frame]] = {
+        logger.debug("Grabbin")
         Try(Option(grabber.grab())) recover {
           case e: Exception => {
             logger.error("Error grabbing the camera frame: ", e)
             None
           }
         }
+      }
     }
 
   override def shape: SourceShape[Frame] = webcamShape

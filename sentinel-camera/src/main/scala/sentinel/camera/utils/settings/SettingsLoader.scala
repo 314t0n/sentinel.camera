@@ -13,7 +13,7 @@ trait SettingsLoader {
   def load(): Settings
 }
 
-class PropertyBasedSettingsLoader extends SettingsLoader {
+class PropertyFileSettingsLoader extends SettingsLoader {
 
   private lazy val os = System.getProperty("os.name")
 
