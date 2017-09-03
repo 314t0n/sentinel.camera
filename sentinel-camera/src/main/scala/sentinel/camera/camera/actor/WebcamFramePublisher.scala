@@ -1,4 +1,4 @@
-package sentinel.camera.webcam.actor
+package sentinel.camera.camera.actor
 
 import java.time.LocalDateTime
 

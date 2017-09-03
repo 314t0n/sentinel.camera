@@ -1,10 +1,10 @@
-package sentinel.camera.webcam.shape
+package sentinel.camera.camera.stage
 
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler}
 import org.bytedeco.javacv.CanvasFrame
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 
 import scala.util.Try
 
@@ -14,7 +14,7 @@ import scala.util.Try
   * @param canvas a JFrame that displays the given frame
   * @param converter converts frame to CanvasFrame
   */
-class ShowImageShape(canvas: CanvasFrame, converter: ToIplImage) extends GraphStage[SinkShape[CameraFrame]] {
+class ShowImageStage(canvas: CanvasFrame, converter: ToIplImage) extends GraphStage[SinkShape[CameraFrame]] {
 
   private val in = Inlet[CameraFrame]("ShowImage.in")
 

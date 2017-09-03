@@ -3,7 +3,7 @@ package sentinel.camera.storage
 import akka.actor.Actor
 import sentinel.camera.storage.Storage._
 import sentinel.camera.utils.CVUtils
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 
 class FileStorage(cvUtils: CVUtils,
                   filePath: String = ".",

@@ -1,4 +1,4 @@
-package sentinel.camera.webcam
+package sentinel.camera.camera
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Source}
@@ -7,10 +7,11 @@ import akka.stream.{ActorMaterializer, KillSwitches}
 import akka.testkit.TestKit
 import org.bytedeco.javacv.{Frame, FrameGrabber}
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
+import sentinel.camera.camera.stage.CameraReaderStage
 import testutils.TestSystem.TestActorSystem
 import testutils.{ShapeSpec, StopSystemAfterAll}
 
-class WebcamStageSpec extends TestKit(ActorSystem(TestActorSystem))
+class CameraReaderStageSpec extends TestKit(ActorSystem(TestActorSystem))
   with ShapeSpec
   with StopSystemAfterAll {
 
@@ -18,7 +19,7 @@ class WebcamStageSpec extends TestKit(ActorSystem(TestActorSystem))
 
   private val grabber = mock[FrameGrabber]
   private val killSwitch = KillSwitches.shared("switch")
-  private val underTest = new WebcamStage(grabber)
+  private val underTest = new CameraReaderStage(grabber)
 
   after {
     verifyNoMoreInteractions(grabber)
@@ -63,7 +64,7 @@ class WebcamStageSpec extends TestKit(ActorSystem(TestActorSystem))
     }
   }
 
-  private def createSource(webcamStage: WebcamStage) = {
+  private def createSource(webcamStage: CameraReaderStage) = {
     val (_, sink) = Source.fromGraph(webcamStage)
       .via(killSwitch.flow)
       .toMat(TestSink.probe)(Keep.both)

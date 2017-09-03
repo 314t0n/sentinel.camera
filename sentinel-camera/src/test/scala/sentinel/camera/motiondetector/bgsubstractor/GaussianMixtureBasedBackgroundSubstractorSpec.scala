@@ -7,7 +7,7 @@ import org.mockito.Mockito.verify
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, Matchers, OneInstancePerTest, WordSpecLike}
 import sentinel.camera.motiondetector.bgsubtractor.GaussianMixtureBasedBackgroundSubstractor
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 
 class GaussianMixtureBasedBackgroundSubstractorSpec extends WordSpecLike
   with BeforeAndAfter

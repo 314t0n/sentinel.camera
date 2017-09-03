@@ -1,4 +1,4 @@
-package sentinel.camera.webcam
+package sentinel.camera.camera
 
 import java.time.LocalDateTime
 import org.bytedeco.javacpp.opencv_core.IplImage

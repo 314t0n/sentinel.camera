@@ -1,7 +1,7 @@
 package sentinel.camera.motiondetector.bgsubtractor
 
 import org.bytedeco.javacpp.opencv_core.{IplImage, Mat}
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 // todo consider moving these to some kind of common package
 object BackgroundSubstractor{
   def toMat(iplImage: IplImage) = new Mat(iplImage)

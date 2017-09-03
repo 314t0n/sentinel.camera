@@ -1,4 +1,4 @@
-package sentinel.camera.webcam.graph
+package sentinel.camera.camera.graph
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, Cancellable}
@@ -9,7 +9,7 @@ import akka.testkit.TestKit
 import org.bytedeco.javacv.{Frame, FrameGrabber}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, OneInstancePerTest, WordSpecLike}
-import sentinel.camera.webcam.WebcamStage
+import sentinel.camera.camera.stage.CameraReaderStage
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 

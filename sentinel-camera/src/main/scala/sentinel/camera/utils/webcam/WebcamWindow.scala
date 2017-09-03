@@ -10,9 +10,9 @@ import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.{CanvasFrame, Frame, OpenCVFrameConverter}
 import sentinel.camera.framegrabber.FFmpegFrameGrabberBuilder
 import sentinel.camera.utils.settings.PropertyFileSettingsLoader
-import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
-import sentinel.camera.webcam.graph.{CameraReaderGraph, ShowImageGraph}
-import sentinel.camera.webcam.{CameraFrame, WebCamera}
+import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
+import sentinel.camera.camera.graph.{CameraReaderGraph, ShowImageGraph}
+import sentinel.camera.camera.{CameraFrame, Camera}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -57,7 +57,7 @@ class GraphSometin(normalCanvas: CanvasFrame,
   val imageDimensions = Dimensions(width = 640, height = 320)
 
   val settings = new PropertyFileSettingsLoader().load()
-  val webcamSource = WebCamera.source(new FFmpegFrameGrabberBuilder(settings))
+  val webcamSource = Camera.source(new FFmpegFrameGrabberBuilder(settings))
   // 30 fps => take a picture every 20 ms
   val tickingSource = Source.tick(1.second, 20.millisecond, 0)
   // Shared between flows in order to shutdown the whole graph

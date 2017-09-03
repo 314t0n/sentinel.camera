@@ -1,4 +1,4 @@
-package sentinel.camera.webcam
+package sentinel.camera.camera.stage
 
 import akka.stream._
 import akka.stream.stage._
@@ -7,10 +7,9 @@ import org.bytedeco.javacv.{Frame, FrameGrabber}
 
 import scala.util.Try
 
-class WebcamStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Frame]] with LazyLogging {
+class CameraReaderStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Frame]] with LazyLogging {
 
   val out = Outlet[Frame]("Webcam.out")
-  val webcamShape = SourceShape.of(out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
@@ -40,5 +39,5 @@ class WebcamStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Frame]] 
       }
     }
 
-  override def shape: SourceShape[Frame] = webcamShape
+  override def shape: SourceShape[Frame] = SourceShape.of(out)
 }

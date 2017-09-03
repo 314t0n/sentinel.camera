@@ -1,4 +1,4 @@
-package sentinel.camera.webcam
+package sentinel.camera.camera
 
 import akka.actor.{ActorSystem, DeadLetterSuppression}
 import akka.contrib.throttle.Throttler.SetTarget
@@ -8,8 +8,8 @@ import org.bytedeco.javacv.FrameGrabber
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Ignore, OneInstancePerTest, WordSpecLike}
-import sentinel.camera.webcam.WebcamFramePublisherSpec._
-import sentinel.camera.webcam.actor.WebcamFramePublisher
+import sentinel.camera.camera.WebcamFramePublisherSpec._
+import sentinel.camera.camera.actor.WebcamFramePublisher
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 

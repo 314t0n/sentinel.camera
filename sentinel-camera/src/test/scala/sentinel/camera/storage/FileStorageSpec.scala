@@ -8,7 +8,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{OneInstancePerTest, WordSpecLike}
 import sentinel.camera.storage.Storage.Save
 import sentinel.camera.utils.CVUtils
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 

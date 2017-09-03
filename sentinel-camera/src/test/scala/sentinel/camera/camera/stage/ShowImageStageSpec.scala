@@ -1,4 +1,4 @@
-package sentinel.camera.webcam.shape
+package sentinel.camera.camera.stage
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Keep
@@ -12,11 +12,11 @@ import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage
 import org.bytedeco.javacv.{CanvasFrame, Frame}
 import org.mockito.Matchers.{eq => mockEq}
 import org.mockito.Mockito._
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 import testutils.TestSystem.TestActorSystem
 import testutils.{ShapeSpec, StopSystemAfterAll}
 
-class ShowImageShapeSpec extends TestKit(ActorSystem(TestActorSystem))
+class ShowImageStageSpec extends TestKit(ActorSystem(TestActorSystem))
   with ShapeSpec
   with StopSystemAfterAll {
 
@@ -28,7 +28,7 @@ class ShowImageShapeSpec extends TestKit(ActorSystem(TestActorSystem))
   private val frame = mock[Frame]
   private val image = mock[IplImage]
 
-  private val underTest: GraphStage[SinkShape[CameraFrame]] = new ShowImageShape(canvas, converter)
+  private val underTest: GraphStage[SinkShape[CameraFrame]] = new ShowImageStage(canvas, converter)
 
   before {
     when(cameraFrame.image).thenReturn(image)

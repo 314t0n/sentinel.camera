@@ -1,6 +1,6 @@
 package sentinel.camera.storage
 
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 
 object Storage{
   case class Save(frame: CameraFrame)

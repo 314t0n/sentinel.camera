@@ -1,4 +1,4 @@
-package sentinel.camera.webcam.graph
+package sentinel.camera.camera.graph
 
 import akka.NotUsed
 import akka.actor.Cancellable
@@ -6,8 +6,8 @@ import akka.stream.{FlowShape, Outlet, SharedKillSwitch, SourceShape}
 import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.{Frame, OpenCVFrameConverter}
-import sentinel.camera.webcam.CameraFrame
-import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
+import sentinel.camera.camera.CameraFrame
+import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.graph.GraphFactory
 
 object CameraReaderGraph {

@@ -3,7 +3,7 @@ package sentinel.camera.motiondetector.bgsubtractor
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacpp.opencv_core._
 import org.bytedeco.javacpp.opencv_video.BackgroundSubtractorMOG2
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 @deprecated
 object GaussianMixtureBasedBackgroundSubstractor {
   @deprecated

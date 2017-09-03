@@ -1,26 +1,25 @@
-package sentinel.camera.motiondetector
+package sentinel.camera.motiondetector.stage
 
 import akka.stream._
 import akka.stream.stage._
 import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
-import sentinel.camera.webcam.CameraFrame
+import sentinel.camera.camera.CameraFrame
 
-class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor)
+class BackgroundSubstractorStage(backgroundSubstractor: BackgroundSubstractor)
   extends GraphStage[FlowShape[CameraFrame, CameraFrame]] with LazyLogging {
 
-  val in = Inlet[CameraFrame]("MotionDetect.in")
-  val out = Outlet[CameraFrame]("MotionDetect.out")
-  val motionDetectShape = FlowShape.of(in, out)
+  private val in = Inlet[CameraFrame]("MotionDetect.in")
+  private val out = Outlet[CameraFrame]("MotionDetect.out")
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
 
-      private def motionDetect(frame: CameraFrame) = backgroundSubstractor.substractBackground(frame)
+      private def substractBackground(frame: CameraFrame) = backgroundSubstractor.substractBackground(frame)
 
       setHandler(in, new InHandler {
         override def onPush(): Unit = {
-          push(out, motionDetect(grab(in)))
+          push(out, substractBackground(grab(in)))
         }
       })
 
@@ -31,5 +30,5 @@ class MotionDetectStage(backgroundSubstractor: BackgroundSubstractor)
       })
     }
 
-  override def shape: FlowShape[CameraFrame, CameraFrame] = motionDetectShape
+  override def shape: FlowShape[CameraFrame, CameraFrame] = FlowShape.of(in, out)
 }

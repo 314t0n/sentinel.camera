@@ -1,4 +1,4 @@
-package sentinel.camera.webcam.framegrabber
+package sentinel.camera.camera.framegrabber
 
 import sentinel.camera.framegrabber.FFmpegFrameGrabberBuilder
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}

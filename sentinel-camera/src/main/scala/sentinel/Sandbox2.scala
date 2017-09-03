@@ -7,15 +7,15 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{BroadcastHub, Flow, GraphDSL, Keep, RunnableGraph, Source}
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacv.CanvasFrame
+import org.bytedeco.javacv.{CanvasFrame, OpenCVFrameConverter}
 import sentinel.camera.framegrabber.FFmpegFrameGrabberBuilder
-import sentinel.camera.motiondetector.MotionDetectStage
 import sentinel.camera.motiondetector.bgsubtractor.{BackgroundSubtractorMOG2Factory, GaussianMixtureBasedBackgroundSubstractor}
+import sentinel.camera.motiondetector.stage.BackgroundSubstractorStage
 import sentinel.camera.utils.settings.PropertyFileSettingsLoader
-import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
-import sentinel.camera.webcam.graph.{CameraReaderGraph}
-import sentinel.camera.webcam.shape.ShowImageShape
-import sentinel.camera.webcam.{CameraFrame, WebCamera}
+import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
+import sentinel.camera.camera.graph.CameraReaderGraph
+import sentinel.camera.camera.stage.ShowImageStage
+import sentinel.camera.camera.{CameraFrame, Camera}
 import sentinel.graph.GraphFactory
 
 import scala.concurrent.duration._
@@ -39,7 +39,7 @@ object Sandbox2 extends App with LazyLogging {
         maxSize = 1))
 
   val settings = new PropertyFileSettingsLoader().load()
-  val webcamSource = WebCamera.source(new FFmpegFrameGrabberBuilder(settings))
+  val webcamSource = Camera.source(new FFmpegFrameGrabberBuilder(settings))
   // 30 fps => take a picture every 20 ms
   val tickingSource = Source.tick(1.second, 20.millisecond, 0)
   // Shared between flows in order to shutdown the whole graph
@@ -61,20 +61,20 @@ object Sandbox2 extends App with LazyLogging {
   val producer = new CameraReaderGraph(webcamSource, tickingSource, killSwitch).createGraph()
 
   val publisher = new BroadcastingGraph(producer).createGraph().run()
-
+  val converter = new OpenCVFrameConverter.ToIplImage()
   // ------------------------
 
   publisher
     .via(killSwitch1.flow)
-    .runWith(new ShowImageShape(normalCanvas, null))
+    .runWith(new ShowImageStage(normalCanvas, converter))
 
   val mog = BackgroundSubtractorMOG2Factory()
   val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 0.01)
 
   publisher
     .via(killSwitch2.flow)
-    .via(new MotionDetectStage(substractor))
-    .runWith(new ShowImageShape(motionCanvas, null))
+    .via(new BackgroundSubstractorStage(substractor))
+    .runWith(new ShowImageStage(motionCanvas, converter))
 
   // ------------------------
 
@@ -89,8 +89,8 @@ object Sandbox2 extends App with LazyLogging {
 
   publisher
     .via(killSwitch.flow)
-    .via(new MotionDetectStage(substractor))
-    .runWith(new ShowImageShape(motionCanvas, null))
+    .via(new BackgroundSubstractorStage(substractor))
+    .runWith(new ShowImageStage(motionCanvas, converter))
 
   Thread.sleep(5000)
 
