@@ -14,7 +14,7 @@ object CameraReaderGraph {
   type CameraSource = Source[CameraFrame, NotUsed] //framesoource imagesource
   type FrameFlow = Flow[CameraFrame, CameraFrame, NotUsed]
 }
-
+// rename to CameraReaderSource?
 class CameraReaderGraph(webcamSource: Source[Frame, NotUsed],
                         tickingSource: Source[Int, Cancellable],
                         killSwitch: SharedKillSwitch) extends GraphFactory[CameraSource] with LazyLogging {

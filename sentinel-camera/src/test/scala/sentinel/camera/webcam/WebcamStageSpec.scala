@@ -7,17 +7,12 @@ import akka.stream.{ActorMaterializer, KillSwitches}
 import akka.testkit.TestKit
 import org.bytedeco.javacv.{Frame, FrameGrabber}
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfter, OneInstancePerTest, WordSpecLike}
-import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
+import testutils.{ShapeSpec, StopSystemAfterAll}
 
 class WebcamStageSpec extends TestKit(ActorSystem(TestActorSystem))
-  with WordSpecLike
-  with OneInstancePerTest
-  with StopSystemAfterAll
-  with BeforeAndAfter
-  with MockitoSugar {
+  with ShapeSpec
+  with StopSystemAfterAll {
 
   implicit val materializer = ActorMaterializer()
 

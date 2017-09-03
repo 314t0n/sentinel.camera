@@ -13,7 +13,8 @@ import sentinel.camera.motiondetector.MotionDetectStage
 import sentinel.camera.motiondetector.bgsubtractor.{BackgroundSubtractorMOG2Factory, GaussianMixtureBasedBackgroundSubstractor}
 import sentinel.camera.utils.settings.PropertyFileSettingsLoader
 import sentinel.camera.webcam.graph.CameraReaderGraph.CameraSource
-import sentinel.camera.webcam.graph.{CameraReaderGraph, MotionDetectorGraph, ShowImageGraph, ShowImageShape}
+import sentinel.camera.webcam.graph.{CameraReaderGraph}
+import sentinel.camera.webcam.shape.ShowImageShape
 import sentinel.camera.webcam.{CameraFrame, WebCamera}
 import sentinel.graph.GraphFactory
 
@@ -43,6 +44,8 @@ object Sandbox2 extends App with LazyLogging {
   val tickingSource = Source.tick(1.second, 20.millisecond, 0)
   // Shared between flows in order to shutdown the whole graph
   val killSwitch = KillSwitches.shared("switch")
+  val killSwitch1= KillSwitches.shared("switch1")
+  val killSwitch2 = KillSwitches.shared("switch2")
 
   val motionCanvas = new CanvasFrame("Masked")
   val normalCanvas = new CanvasFrame("Webcam")
@@ -53,15 +56,58 @@ object Sandbox2 extends App with LazyLogging {
   normalCanvas.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE)
   addCloseEvent(normalCanvas)
 
+  // ------------------------
+
   val producer = new CameraReaderGraph(webcamSource, tickingSource, killSwitch).createGraph()
 
-  val fromProducer = new BroadcastingGraph(producer).createGraph().run()
+  val publisher = new BroadcastingGraph(producer).createGraph().run()
 
-  fromProducer.runWith(new ShowImageShape(normalCanvas))
+  // ------------------------
+
+  publisher
+    .via(killSwitch1.flow)
+    .runWith(new ShowImageShape(normalCanvas, null))
+
   val mog = BackgroundSubtractorMOG2Factory()
   val substractor = new GaussianMixtureBasedBackgroundSubstractor(mog, 0.01)
 
-  fromProducer.via(new MotionDetectStage(substractor)).runWith(new ShowImageShape(motionCanvas))
+  publisher
+    .via(killSwitch2.flow)
+    .via(new MotionDetectStage(substractor))
+    .runWith(new ShowImageShape(motionCanvas, null))
+
+  // ------------------------
+
+  Thread.sleep(10000)
+
+  logger.info("Killing 2nd")
+  killSwitch2.shutdown()
+
+  Thread.sleep(10000)
+
+  logger.info("restarting 2nd")
+
+  publisher
+    .via(killSwitch.flow)
+    .via(new MotionDetectStage(substractor))
+    .runWith(new ShowImageShape(motionCanvas, null))
+
+  Thread.sleep(5000)
+
+  logger.info("Killing 1st")
+  killSwitch1.shutdown()
+
+  Thread.sleep(5000)
+
+  logger.info("Killing all")
+  killSwitch.shutdown()
+
+  logger.info("Terminating")
+  Thread.sleep(2000)
+
+  system.terminate()
+
+  // ------------------------
 
   class BroadcastingGraph(source: CameraSource)
     extends GraphFactory[RunnableGraph[CameraSource]]

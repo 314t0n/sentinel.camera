@@ -3,10 +3,12 @@ package sentinel.camera.utils.settings
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 sealed trait Settings {
   /**
     * Camera path on the OS.
+    *
     * @return
     */
   def cameraPath(): String
@@ -35,6 +37,7 @@ sealed trait Settings {
     */
   def motionDetectOptions(): Map[String, AnyRef]
 }
+
 /**
   * Settings defined in a property file.
   *
@@ -46,8 +49,12 @@ class PropertyBasedSettings(config: Config) extends Settings {
 
   override def cameraFormat(): String = config.getString("camera.ffmpeg.format")
 
+  private def options = Try(Some(config.getObject("camera.options"))).recover { case _ => None }.get
+
   override def cameraOptions(): Map[String, AnyRef] =
-    config.getObject("camera.options").unwrapped.asScala.toMap
+    options
+      .map(f => f.unwrapped.asScala.toMap)
+      .getOrElse(Map.empty)
 
   override def motionDetectOptions(): Map[String, String] = Map()
 }
