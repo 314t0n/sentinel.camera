@@ -5,14 +5,13 @@ import java.awt.event.{WindowAdapter, WindowEvent}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.scaladsl.{BroadcastHub, Flow, GraphDSL, Keep, MergeHub, Sink, Source}
+import akka.stream.scaladsl.{BroadcastHub, Flow, GraphDSL, Keep, Sink, Source}
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.{CanvasFrame, Frame, OpenCVFrameConverter}
+import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
+import sentinel.camera.camera.{Camera, CameraFrame}
 import sentinel.camera.framegrabber.FFmpegFrameGrabberBuilder
 import sentinel.camera.utils.settings.PropertyFileSettingsLoader
-import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
-import sentinel.camera.camera.graph.{CameraReaderGraph, ShowImageGraph}
-import sentinel.camera.camera.{CameraFrame, Camera}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

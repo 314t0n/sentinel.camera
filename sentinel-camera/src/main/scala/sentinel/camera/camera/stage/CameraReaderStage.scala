@@ -29,7 +29,7 @@ class CameraReaderStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Fr
       }
 
       private def grabFrame(): Try[Option[Frame]] = {
-//        logger.debug("Grabbin")
+        //        logger.debug("Grabbin")
         Try(Option(grabber.grab())) recover {
           case e: Exception => {
             logger.error("Error grabbing the camera frame: ", e)

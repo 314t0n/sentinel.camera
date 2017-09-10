@@ -14,8 +14,8 @@ import sentinel.camera.motiondetector.stage.BackgroundSubstractorStage
 import sentinel.camera.utils.settings.PropertyFileSettingsLoader
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.camera.camera.graph.CameraReaderGraph
-import sentinel.camera.camera.stage.ShowImageStage
-import sentinel.camera.camera.{CameraFrame, Camera}
+import sentinel.camera.camera.stage.{CameraReaderStage, ShowImageStage}
+import sentinel.camera.camera.{Camera, CameraFrame}
 import sentinel.graph.GraphFactory
 
 import scala.concurrent.duration._
@@ -39,6 +39,7 @@ object Sandbox2 extends App with LazyLogging {
         maxSize = 1))
 
   val settings = new PropertyFileSettingsLoader().load()
+
   val webcamSource = Camera.source(new FFmpegFrameGrabberBuilder(settings))
   // 30 fps => take a picture every 20 ms
   val tickingSource = Source.tick(1.second, 20.millisecond, 0)
@@ -78,12 +79,12 @@ object Sandbox2 extends App with LazyLogging {
 
   // ------------------------
 
-  Thread.sleep(10000)
+  Thread.sleep(5000)
 
   logger.info("Killing 2nd")
   killSwitch2.shutdown()
 
-  Thread.sleep(10000)
+  Thread.sleep(5000)
 
   logger.info("restarting 2nd")
 
