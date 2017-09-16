@@ -8,7 +8,7 @@ object Messages {
   val Finished = "Finished"
   val AlreadyStarted = "Already started"
 
-  sealed trait Request
+  trait Request
 
   case class Start(ks: KillSwitch) extends Request
 

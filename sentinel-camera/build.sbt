@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.12.1"
 
-val akkaVersion = "2.4.16"
+val akkaVersion = "2.5.4"
 
 // TODO check if it's needed
 //javaCppPlatform := Seq("linux-arm")
