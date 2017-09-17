@@ -1,5 +1,7 @@
 package sentinel.router
 
+import akka.actor.ActorRef
+import akka.routing.{Routee, Routees}
 import akka.stream.KillSwitch
 
 object Messages {
@@ -12,7 +14,15 @@ object Messages {
 
   case class Start(ks: KillSwitch) extends Request
 
+  case object NoRequest extends Request
+
   case object Stop extends Request
+
+  case class WaitingForResponse(requestor: ActorRef, numberOfResponses: Int) extends Request
+
+  private[router] case object GoToActive extends Request
+
+  private[router] case object GoToIdle extends Request
 
   sealed trait Response
 

@@ -21,10 +21,6 @@ class Switch(router: ActorRef)(implicit val ec: ExecutionContext) extends FSM[St
   private val duration = 2 seconds
   private implicit val timeout = Timeout(duration) // TODO config
 
-  private case object GoToActive extends Request
-
-  private case object GoToIdle extends Request
-
   startWith(Idle, Stop)
 
   when(Waiting) {
