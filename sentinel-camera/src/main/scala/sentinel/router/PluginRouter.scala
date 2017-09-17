@@ -1,25 +1,20 @@
 package sentinel.router
 
-import akka.actor.ActorRef
-import akka.actor.FSM
-import akka.routing.Router
-import akka.routing.RoutingLogic
-import akka.routing.SeveralRoutees
-import sentinel.router.Messages._
+import akka.actor.{ActorRef, FSM}
 import akka.pattern.ask
-import akka.stream.KillSwitch
+import akka.routing.{Router, RoutingLogic, SeveralRoutees}
 import akka.util.Timeout
+import sentinel.router.Messages._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Failure
-import scala.util.Success
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: SeveralRoutees)(
-  implicit val ec: ExecutionContext)
-  extends FSM[State, Request] {
+    implicit val ec: ExecutionContext)
+    extends FSM[State, Request] {
 
-  private val duration = 2 seconds
+  private val duration         = 2 seconds
   private implicit val timeout = Timeout(duration) // TODO config
 
   private val router = Router(routingLogic, routees.routees)
@@ -41,8 +36,12 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
       if (remainingResponses == 0) self ! GoToIdle
       stay() using WaitingForRoutees(requestor, remainingResponses - 1)
 
-    case Event(SourceInit(bs), WaitingForSource(sender, ks)) =>
+    case Event(SourceInit(bs), WaitingForSource(sender, Start(ks))) =>
       router.route(PluginStart(ks, bs), self)
+      goto(Waiting) using WaitingForRoutees(sender, router.routees.size - 1)
+
+    case Event(Ready(Finished), WaitingForSource(sender, Stop)) =>
+      router.route(Stop, self)
       goto(Waiting) using WaitingForRoutees(sender, router.routees.size - 1)
   }
 
@@ -60,26 +59,25 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
 
   when(Idle) {
     case Event(Start(ks), _) =>
-      askSourceToStart(ks)
-      goto(Waiting) using WaitingForSource(sender, ks)
+      askSource(Start(ks))
+      goto(Waiting) using WaitingForSource(sender, Start(ks))
   }
 
-  private def askSourceToStart(ks: KillSwitch) = {
-    ask(cameraSource, Start(ks))
+  private def askSource(request: Request) =
+    ask(cameraSource, request)
       .mapTo[Response]
       .onComplete {
-        case Success(SourceInit(bs)) =>
-          self ! SourceInit(bs)
+        case Success(request: Response) =>
+          self ! request
         case Failure(t) =>
           log.error("Error occurred while waiting for response: {}", t)
           self ! GoToIdle
       }
-  }
 
   when(Active) {
     case Event(Stop, _) =>
-      router.route(Stop, self)
-      goto(Waiting) using WaitingForRoutees(sender, router.routees.size - 1)
+      askSource(Stop)
+      goto(Waiting) using WaitingForSource(sender, Stop)
   }
 
   whenUnhandled {
@@ -92,7 +90,11 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
       sender() ! Error(Finished)
       stay
     case Event(e, s) =>
-      log.warning("received unhandled request {} in state {}/{}, sender: {}", e, stateName, s, sender)
+      log.warning("received unhandled request {} in state {}/{}, sender: {}",
+                  e,
+                  stateName,
+                  s,
+                  sender)
       stay
   }
 

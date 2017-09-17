@@ -48,20 +48,20 @@ class PluginRouterSpec
 
     "happy path" should {
 
-      "switch from Idle to Active" in {
-        val request  = Start(killSwitch)
-        val response = Ready(Ok)
+      "be Idle by defautl" in {
         underTest.stateName shouldBe Idle
+      }
 
-        underTest ! request
+      "switch from Idle to Active" in {
+        underTest ! Start(killSwitch)
 
-        cameraSource.expectMsg(request)
+        cameraSource.expectMsg(Start(killSwitch))
         cameraSource.reply(SourceInit(broadcast))
-        routees foreach { r =>
-          r.expectMsg(PluginStart(killSwitch, broadcast))
-          r.reply(response)
+        routees foreach { routee =>
+          routee.expectMsg(PluginStart(killSwitch, broadcast))
+          routee.reply(Ready(Ok))
         }
-        expectMsg(response)
+        expectMsg(Ready(Ok))
         underTest.stateName shouldBe Active
         verifyZeroInteractions(killSwitch)
       }
@@ -71,6 +71,8 @@ class PluginRouterSpec
 
         underTest ! Stop
 
+        cameraSource.expectMsg(Stop)
+        cameraSource.reply(Ready(Finished))
         routees foreach { r =>
           r.expectMsg(Stop)
           r.reply(Ready(Finished))
@@ -78,7 +80,6 @@ class PluginRouterSpec
         expectMsg(Ready(Finished))
         underTest.stateName shouldBe Idle
       }
-
     }
 
     "error handling" should {
@@ -107,13 +108,13 @@ class PluginRouterSpec
   }
 
   private def setActiveState = {
-    val request = Start(killSwitch)
-    underTest ! request
-    routees foreach { r =>
-      r.expectMsg(request)
-      r.reply(Ready(Ok))
+    underTest ! Start(killSwitch)
+    cameraSource.expectMsg(Start(killSwitch))
+    cameraSource.reply(SourceInit(broadcast))
+    routees foreach { routee =>
+      routee.expectMsg(PluginStart(killSwitch, broadcast))
+      routee.reply(Ready(Ok))
     }
     expectMsg(Ready(Ok))
-    underTest.stateName shouldBe Active
   }
 }

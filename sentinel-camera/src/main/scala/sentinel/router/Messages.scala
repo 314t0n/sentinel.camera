@@ -21,7 +21,7 @@ object Messages {
   case object Stop extends Request
 
   case class WaitingForRoutees(requestor: ActorRef, numberOfResponses: Int) extends Request
-  case class WaitingForSource(requestor: ActorRef, ks: KillSwitch) extends Request
+  case class WaitingForSource(requestor: ActorRef, request: Request) extends Request
 
   private[router] case object GoToActive extends Request
 
