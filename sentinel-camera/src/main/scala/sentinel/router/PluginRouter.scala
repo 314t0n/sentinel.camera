@@ -11,10 +11,10 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: SeveralRoutees)(
-    implicit val ec: ExecutionContext)
-    extends FSM[State, Request] {
+  implicit val ec: ExecutionContext)
+  extends FSM[State, Request] {
 
-  private val duration         = 2 seconds
+  private val duration = 2 seconds
   private implicit val timeout = Timeout(duration) // TODO config
 
   private val router = Router(routingLogic, routees.routees)
@@ -26,7 +26,12 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
       goto(Active) using NoRequest
 
     case Event(GoToIdle, _) =>
-      goto(Idle) using NoRequest
+      goto(Idle) using Stop
+
+    case Event(Error(reason), WaitingForSource(requestor, _)) =>
+      requestor ! Error(reason)
+      println("elkuldtem ay errort")
+      goto(Idle) using Stop
 
     case Event(Ready(Ok), WaitingForRoutees(requestor, remainingResponses)) =>
       if (remainingResponses == 0) self ! GoToActive
@@ -53,7 +58,13 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
 
     case Waiting -> Idle =>
       stateData match {
-        case WaitingForRoutees(requestor, _) => requestor ! Ready(Finished)
+        case WaitingForRoutees(requestor, _) => {
+          requestor ! Ready(Finished)
+        }
+        case WaitingForSource(requestor, Start(ks)) => {
+          ks.shutdown()
+        }
+          // todo edge case
       }
   }
 
@@ -71,7 +82,7 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
           self ! request
         case Failure(t) =>
           log.error("Error occurred while waiting for response: {}", t)
-          self ! GoToIdle
+          self ! Error(t.getMessage)
       }
 
   when(Active) {
@@ -91,10 +102,10 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
       stay
     case Event(e, s) =>
       log.warning("received unhandled request {} in state {}/{}, sender: {}",
-                  e,
-                  stateName,
-                  s,
-                  sender)
+        e,
+        stateName,
+        s,
+        sender)
       stay
   }
 

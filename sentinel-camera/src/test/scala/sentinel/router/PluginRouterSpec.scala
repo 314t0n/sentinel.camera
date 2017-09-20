@@ -15,10 +15,12 @@ import org.mockito.Mockito.verifyZeroInteractions
 import org.scalatest.Matchers
 import org.scalatest.OneInstancePerTest
 import org.scalatest.WordSpecLike
+import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.graph.SourceBroadCast
 import sentinel.router.Messages._
 import testutils.StopSystemAfterAll
+
 import scala.concurrent.duration._
 import testutils.TestSystem.TestActorSystem
 
@@ -29,6 +31,7 @@ class PluginRouterSpec
     with OneInstancePerTest
     with StopSystemAfterAll
     with Matchers
+    with Eventually
     with MockitoSugar {
 
   private implicit val ec  = system.dispatcher
@@ -82,9 +85,23 @@ class PluginRouterSpec
       }
     }
 
-    "error handling" should {
+    "error handling" when {
 
       // TODO rotuee timeouts
+
+      "source timout handled" when {
+        "switch from Idle to Active" in {
+          underTest ! Start(killSwitch)
+
+          cameraSource.expectMsg(Start(killSwitch))
+
+          expectMsgAnyClassOf(3 seconds, classOf[Error])
+          eventually {
+            underTest.stateName shouldBe Idle
+          }
+          verify(killSwitch).shutdown()
+        }
+      }
 
       "not switch from Active to Active" in {
         setActiveState
