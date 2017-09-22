@@ -1,28 +1,19 @@
 package sentinel.router
 
 import akka.actor.ActorSystem
-import akka.routing.ActorRefRoutee
-import akka.routing.BroadcastRoutingLogic
-import akka.routing.Routee
-import akka.routing.SeveralRoutees
+import akka.routing.{ActorRefRoutee, BroadcastRoutingLogic, SeveralRoutees}
 import akka.stream.KillSwitch
-import akka.testkit.ImplicitSender
-import akka.testkit.TestFSMRef
-import akka.testkit.TestKit
-import akka.testkit.TestProbe
-import org.mockito.Mockito.verify
+import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
 import org.mockito.Mockito.verifyZeroInteractions
-import org.scalatest.Matchers
-import org.scalatest.OneInstancePerTest
-import org.scalatest.WordSpecLike
+import org.scalatest.{Matchers, OneInstancePerTest, WordSpecLike}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.graph.SourceBroadCast
 import sentinel.router.Messages._
 import testutils.StopSystemAfterAll
+import testutils.TestSystem.TestActorSystem
 
 import scala.concurrent.duration._
-import testutils.TestSystem.TestActorSystem
 
 class PluginRouterSpec
     extends TestKit(ActorSystem(TestActorSystem))
@@ -88,9 +79,41 @@ class PluginRouterSpec
 
     "error handling" when {
 
-      // TODO rotuee timeouts
+      "routees timeout handled" when {
+        "switch from Idle to Active" in {
+          underTest ! Start(killSwitch)
 
-      "source timout handled" when {
+          cameraSource.expectMsg(Start(killSwitch))
+          cameraSource.reply(SourceInit(broadcast))
+          routees foreach { routee =>
+            routee.expectMsg(PluginStart(killSwitch, broadcast))
+          }
+          expectMsgAnyClassOf(4 seconds, classOf[Error])
+          eventually {
+            underTest.stateName shouldBe Idle
+          }
+          verifyZeroInteractions(killSwitch)
+        }
+
+        "switch from Active to Idle" in {
+          setActiveState
+
+          underTest ! Stop
+
+          cameraSource.expectMsg(Stop)
+          cameraSource.reply(Ready(Finished))
+          routees foreach { routee =>
+            routee.expectMsg(Stop)
+          }
+          expectMsgAnyClassOf(4 seconds, classOf[Error])
+          eventually {
+            underTest.stateName shouldBe Idle
+          }
+          verifyZeroInteractions(killSwitch)
+        }
+      }
+
+      "source timoeut handled" when {
         "switch from Idle to Active" in {
           underTest ! Start(killSwitch)
 
