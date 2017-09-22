@@ -1,20 +1,24 @@
 package sentinel.router
 
-import akka.actor.{ActorRef, FSM}
+import akka.actor.ActorRef
+import akka.actor.FSM
 import akka.pattern.ask
-import akka.routing.{Router, RoutingLogic, SeveralRoutees}
+import akka.routing.Router
+import akka.routing.RoutingLogic
+import akka.routing.SeveralRoutees
 import akka.util.Timeout
 import sentinel.router.Messages._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
 
 class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: SeveralRoutees)(
-  implicit val ec: ExecutionContext)
-  extends FSM[State, Request] {
+    implicit val ec: ExecutionContext)
+    extends FSM[State, Request] {
 
-  private val duration = 2 seconds
+  private val duration         = 2 seconds
   private implicit val timeout = Timeout(duration) // TODO config
 
   private val router = Router(routingLogic, routees.routees)
@@ -30,7 +34,6 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
 
     case Event(Error(reason), WaitingForSource(requestor, _)) =>
       requestor ! Error(reason)
-      println("elkuldtem ay errort")
       goto(Idle) using Stop
 
     case Event(Ready(Ok), WaitingForRoutees(requestor, remainingResponses)) =>
@@ -53,18 +56,15 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
   onTransition {
     case Waiting -> Active =>
       stateData match {
-        case WaitingForRoutees(requestor, _) => requestor ! Ready(Ok)
+        case WaitingForRoutees(requestor, _)   => requestor ! Ready(Ok)
       }
 
     case Waiting -> Idle =>
       stateData match {
-        case WaitingForRoutees(requestor, _) => {
+        case WaitingForRoutees(requestor, _) =>
           requestor ! Ready(Finished)
-        }
-        case WaitingForSource(requestor, Start(ks)) => {
-          ks.shutdown()
-        }
-          // todo edge case
+        case WaitingForSource(_, _) =>
+          log.error("PluginRouter timeouted while waiting for source in state")
       }
   }
 
@@ -102,10 +102,10 @@ class PluginRouter(cameraSource: ActorRef, routingLogic: RoutingLogic, routees: 
       stay
     case Event(e, s) =>
       log.warning("received unhandled request {} in state {}/{}, sender: {}",
-        e,
-        stateName,
-        s,
-        sender)
+                  e,
+                  stateName,
+                  s,
+                  sender)
       stay
   }
 

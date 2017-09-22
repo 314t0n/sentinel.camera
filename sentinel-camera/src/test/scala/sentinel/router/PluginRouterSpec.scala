@@ -82,6 +82,7 @@ class PluginRouterSpec
         }
         expectMsg(Ready(Finished))
         underTest.stateName shouldBe Idle
+        verifyZeroInteractions(killSwitch)
       }
     }
 
@@ -99,7 +100,21 @@ class PluginRouterSpec
           eventually {
             underTest.stateName shouldBe Idle
           }
-          verify(killSwitch).shutdown()
+          verifyZeroInteractions(killSwitch)
+        }
+
+        "switch from Active to Idle" in {
+          setActiveState
+
+          underTest ! Stop
+
+          cameraSource.expectMsg(Stop)
+
+          expectMsgAnyClassOf(3 seconds, classOf[Error])
+          eventually {
+            underTest.stateName shouldBe Idle
+          }
+          verifyZeroInteractions(killSwitch)
         }
       }
 
