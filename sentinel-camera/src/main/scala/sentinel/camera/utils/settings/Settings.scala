@@ -1,11 +1,15 @@
 package sentinel.camera.utils.settings
 
+import java.util.concurrent.TimeUnit
+
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 import scala.util.Try
 
 sealed trait Settings {
+
   /**
     * Camera path on the OS.
     *
@@ -36,6 +40,8 @@ sealed trait Settings {
     * @return key value pairs
     */
   def motionDetectOptions(): Map[String, AnyRef]
+
+  def getDuration(path: String, unit: TimeUnit): FiniteDuration
 }
 
 /**
@@ -49,12 +55,20 @@ class PropertyBasedSettings(config: Config) extends Settings {
 
   override def cameraFormat(): String = config.getString("camera.ffmpeg.format")
 
-  private def options = Try(Some(config.getObject("camera.options"))).recover { case _ => None }.get
-
   override def cameraOptions(): Map[String, AnyRef] =
-    options
+    getOptionsMap("camera.options")
+
+  override def motionDetectOptions(): Map[String, String] = Map()
+
+  override def getDuration(path: String, unit: TimeUnit): FiniteDuration =
+    FiniteDuration(config.getDuration(path, unit), unit)
+
+  private def options(path: String) =
+    Try(Some(config.getObject(path))).recover { case _ => None }.get
+
+  private def getOptionsMap(path: String) =
+    options(path)
       .map(f => f.unwrapped.asScala.toMap)
       .getOrElse(Map.empty)
 
-  override def motionDetectOptions(): Map[String, String] = Map()
 }

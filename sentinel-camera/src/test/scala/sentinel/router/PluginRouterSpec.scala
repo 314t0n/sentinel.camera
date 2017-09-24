@@ -1,19 +1,29 @@
 package sentinel.router
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import akka.routing.{ActorRefRoutee, BroadcastRoutingLogic, SeveralRoutees}
 import akka.stream.KillSwitch
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
-import org.mockito.Mockito.verifyZeroInteractions
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpecLike}
+import org.mockito.Mockito
+import org.mockito.Matchers.{any, eq => eqTo}
+import org.mockito.Mockito.{reset, verifyZeroInteractions, when}
+import org.scalatest.{
+  BeforeAndAfter,
+  Matchers,
+  OneInstancePerTest,
+  WordSpecLike
+}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.graph.SourceBroadCast
+import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.{FiniteDuration, _}
 
 class PluginRouterSpec
     extends TestKit(ActorSystem(TestActorSystem))
@@ -25,18 +35,23 @@ class PluginRouterSpec
     with Eventually
     with MockitoSugar {
 
-  private implicit val ec  = system.dispatcher
+  private implicit val ec = system.dispatcher
   private val routingLogic = BroadcastRoutingLogic()
   private val cameraSource = TestProbe()
-  private val routeeA      = TestProbe()
-  private val routeeB      = TestProbe()
-  private val routees      = Vector(routeeA, routeeB)
-  private val underTest = TestFSMRef(
-    new PluginRouter(cameraSource.ref,
-                     routingLogic,
-                     SeveralRoutees(routees.map(_.ref).map(ActorRefRoutee(_)))))
+  private val routeeA = TestProbe()
+  private val routeeB = TestProbe()
+  private val routees = Vector(routeeA, routeeB)
+  private val severalRoutees = SeveralRoutees(
+    routees.map(_.ref).map(ActorRefRoutee(_)))
+  private val settings = mock[Settings]
   private val killSwitch = mock[KillSwitch]
-  private val broadcast  = mock[SourceBroadCast]
+  private val broadcast = mock[SourceBroadCast]
+  when(settings.getDuration(any[String], any[TimeUnit]))
+    .thenReturn({
+      FiniteDuration(50, TimeUnit.MILLISECONDS)
+    })
+  private val underTest = TestFSMRef(
+    new PluginRouter(cameraSource.ref, routingLogic, severalRoutees, settings))
 
   "PluginRouter" when {
 

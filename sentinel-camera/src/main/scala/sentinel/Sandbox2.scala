@@ -79,7 +79,7 @@ object Sandbox2 extends App with LazyLogging {
 
   // ------------------------
 
-  Thread.sleep(5000)
+  Thread.sleep(15000)
 
   logger.info("Killing 2nd")
   killSwitch2.shutdown()
