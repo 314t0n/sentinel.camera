@@ -43,13 +43,11 @@ class PluginRouterSpec
   private val routees = Vector(routeeA, routeeB)
   private val severalRoutees = SeveralRoutees(
     routees.map(_.ref).map(ActorRefRoutee(_)))
-  private val settings = mock[Settings]
   private val killSwitch = mock[KillSwitch]
   private val broadcast = mock[SourceBroadCast]
+  private val settings = mock[Settings]
   when(settings.getDuration(any[String], any[TimeUnit]))
-    .thenReturn({
-      FiniteDuration(50, TimeUnit.MILLISECONDS)
-    })
+    .thenReturn(50 milliseconds)
   private val underTest = TestFSMRef(
     new PluginRouter(cameraSource.ref, routingLogic, severalRoutees, settings))
 

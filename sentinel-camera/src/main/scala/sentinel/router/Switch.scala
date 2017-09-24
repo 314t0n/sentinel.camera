@@ -1,8 +1,11 @@
 package sentinel.router
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{ActorRef, FSM}
 import akka.pattern.ask
 import akka.util.Timeout
+import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages.{Stop, _}
 
 import scala.concurrent.ExecutionContext
@@ -16,10 +19,12 @@ import scala.util.{Failure, Success}
   *
   * @param router
   */
-class Switch(router: ActorRef)(implicit val ec: ExecutionContext) extends FSM[State, Request] {
+class Switch(router: ActorRef, settings: Settings)(
+    implicit val ec: ExecutionContext)
+    extends FSM[State, Request] {
 
-  private val duration = 2 seconds
-  private implicit val timeout = Timeout(duration) // TODO config
+  private val duration = settings.getDuration("system.options.startUpTimeout", TimeUnit.SECONDS)
+  private implicit val timeout = Timeout(duration)
 
   startWith(Idle, Stop)
 
@@ -42,8 +47,11 @@ class Switch(router: ActorRef)(implicit val ec: ExecutionContext) extends FSM[St
       goto(Waiting)
   }
 
-  private def askRouter(request: Request, nextState: Request, requestor: ActorRef) =
-    ask(router, request).mapTo[Response]
+  private def askRouter(request: Request,
+                        nextState: Request,
+                        requestor: ActorRef) =
+    ask(router, request)
+      .mapTo[Response]
       .onComplete {
         case Success(Ready(msg)) =>
           self ! nextState
@@ -60,7 +68,8 @@ class Switch(router: ActorRef)(implicit val ec: ExecutionContext) extends FSM[St
         case Start(ks) =>
           ks.shutdown()
         case _ =>
-          log.warning("received unhandled request {} in state Active", stateName)
+          log.warning("received unhandled request {} in state Active",
+                      stateName)
       }
   }
 
@@ -74,7 +83,10 @@ class Switch(router: ActorRef)(implicit val ec: ExecutionContext) extends FSM[St
       sender() ! Error(Finished)
       stay
     case Event(e, s) =>
-      log.warning("received unhandled request {} in state {}/{}", e, stateName, s)
+      log.warning("received unhandled request {} in state {}/{}",
+                  e,
+                  stateName,
+                  s)
       stay
   }
 

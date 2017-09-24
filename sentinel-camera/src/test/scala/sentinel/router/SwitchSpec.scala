@@ -1,11 +1,15 @@
 package sentinel.router
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import akka.stream.KillSwitch
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
-import org.mockito.Mockito.{verify, verifyZeroInteractions}
+import org.mockito.Matchers.any
+import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpecLike}
+import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
@@ -22,7 +26,10 @@ class SwitchSpec extends TestKit(ActorSystem(TestActorSystem))
 
   private implicit val ec = system.dispatcher
   private val router = TestProbe()
-  private val underTest = TestFSMRef(new Switch(router.ref))
+  private val settings = mock[Settings]
+  when(settings.getDuration(any[String], any[TimeUnit]))
+    .thenReturn(50 milliseconds)
+  private val underTest = TestFSMRef(new Switch(router.ref, settings))
   private val killSwitch = mock[KillSwitch]
 
   "Switch" when {
