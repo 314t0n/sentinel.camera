@@ -1,11 +1,13 @@
 package sentinel.camera.camera.graph
 
+import javax.inject.Inject
+
 import akka.stream.scaladsl.{BroadcastHub, Keep, RunnableGraph}
 import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.graph.GraphFactory
-
-class SourceBroadCast(source: CameraSource)
+@deprecated
+class SourceBroadCast @Inject()(source: CameraSource)
     extends GraphFactory[RunnableGraph[CameraSource]]
     with LazyLogging {
 

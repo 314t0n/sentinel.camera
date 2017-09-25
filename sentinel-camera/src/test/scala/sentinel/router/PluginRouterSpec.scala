@@ -5,18 +5,15 @@ import java.util.concurrent.TimeUnit
 import akka.actor.ActorSystem
 import akka.routing.{ActorRefRoutee, BroadcastRoutingLogic, SeveralRoutees}
 import akka.stream.KillSwitch
+import akka.stream.scaladsl.RunnableGraph
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
 import org.mockito.Mockito
 import org.mockito.Matchers.{any, eq => eqTo}
 import org.mockito.Mockito.{reset, verifyZeroInteractions, when}
-import org.scalatest.{
-  BeforeAndAfter,
-  Matchers,
-  OneInstancePerTest,
-  WordSpecLike
-}
+import org.scalatest.{BeforeAndAfter, Matchers, OneInstancePerTest, WordSpecLike}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
+import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.camera.camera.graph.SourceBroadCast
 import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
@@ -44,7 +41,7 @@ class PluginRouterSpec
   private val severalRoutees = SeveralRoutees(
     routees.map(_.ref).map(ActorRefRoutee(_)))
   private val killSwitch = mock[KillSwitch]
-  private val broadcast = mock[SourceBroadCast]
+  private val broadcast = mock[RunnableGraph[CameraSource]]
   private val settings = mock[Settings]
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)

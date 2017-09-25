@@ -42,6 +42,8 @@ sealed trait Settings {
   def motionDetectOptions(): Map[String, AnyRef]
 
   def getDuration(path: String, unit: TimeUnit): FiniteDuration
+
+  def getInt(path: String): Int
 }
 
 /**
@@ -71,4 +73,5 @@ class PropertyBasedSettings(config: Config) extends Settings {
       .map(f => f.unwrapped.asScala.toMap)
       .getOrElse(Map.empty)
 
+  override def getInt(path: String): Int = config.getInt(path)
 }

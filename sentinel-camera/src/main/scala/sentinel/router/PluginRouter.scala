@@ -47,8 +47,8 @@ class PluginRouter(cameraSource: ActorRef,
       if (remainingResponses == 0) self ! GoToIdle
       stay() using WaitingForRoutees(requestor, remainingResponses - 1)
 
-    case Event(SourceInit(bs), WaitingForSource(sender, Start(ks))) =>
-      router.route(PluginStart(ks, bs), self)
+    case Event(SourceInit(broadcast), WaitingForSource(sender, Start(ks))) =>
+      router.route(PluginStart(ks, broadcast), self)
       scheduleRouterTimeoutCheck
       goto(Waiting) using WaitingForRoutees(sender, router.routees.size - 1)
 
