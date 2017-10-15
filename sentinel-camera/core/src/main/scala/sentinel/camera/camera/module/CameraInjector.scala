@@ -5,7 +5,7 @@ import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import sentinel.camera.camera.graph.factory.CameraReaderGraphFactory
 import sentinel.camera.framegrabber.{FFmpegFrameGrabberBuilder, FrameGrabberBuilder}
-//TODO RenameTo CameraInjector
+
 class CameraInjector extends AbstractModule {
 
   override def configure(): Unit = {

@@ -16,7 +16,7 @@ import testutils.TestSystem.TestActorSystem
 
 import scala.concurrent.duration._
 
-class SwitchSpec extends TestKit(ActorSystem(TestActorSystem))
+class SwitchFSMSpec extends TestKit(ActorSystem(TestActorSystem))
   with ImplicitSender
   with WordSpecLike
   with OneInstancePerTest
@@ -29,7 +29,7 @@ class SwitchSpec extends TestKit(ActorSystem(TestActorSystem))
   private val settings = mock[Settings]
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)
-  private val underTest = TestFSMRef(new Switch(router.ref, settings))
+  private val underTest = TestFSMRef(new SwitchFSM(router.ref, settings))
   private val killSwitch = mock[KillSwitch]
 
   "Switch" when {

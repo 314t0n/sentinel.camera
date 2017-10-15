@@ -15,11 +15,13 @@ import scala.concurrent.ExecutionContext
 import scala.util.Failure
 import scala.util.Success
 
-object Switch {
+object SwitchFSM {
 
-  def props(router: ActorRef, settings: Settings)(
+  val Name = classOf[SwitchFSM].getName
+
+  def props(camera: ActorRef, settings: Settings)(
       implicit ec: ExecutionContext) =
-    Props(new Switch(router, settings))
+    Props(new SwitchFSM(camera, settings))
 
 }
 
@@ -28,9 +30,9 @@ object Switch {
   * shutdown killSwitch on Stop
   * delegate state changes to a router
   *
-  * @param router
+  * @param camera
   */
-class Switch(router: ActorRef, settings: Settings)(
+class SwitchFSM(camera: ActorRef, settings: Settings)(
     implicit val ec: ExecutionContext)
     extends FSM[State, Request] {
 
@@ -42,6 +44,7 @@ class Switch(router: ActorRef, settings: Settings)(
 
   when(Waiting) {
     case Event(GoToActive, _) =>
+      log.debug("Active")
       goto(Active)
     case Event(GoToIdle, _) =>
       goto(Idle)
@@ -63,20 +66,25 @@ class Switch(router: ActorRef, settings: Settings)(
   private def askRouter(request: Request,
                         nextState: Request,
                         requestor: ActorRef) = {
-    log.debug(s"Ask router to $request")
-    ask(router, request)
+    log.debug(s"Ask camera to $request")
+    ask(camera, request)
       .mapTo[Response]
       .onComplete {
         case Success(Ready(msg)) =>
-          log.debug("Router responded with Success")
+          log.debug("Camera responded with Success")
           self ! nextState
           requestor ! Ready(msg)
+        case Success(Error(reason)) =>
+          log.error("Camera responded with error message {}", reason)
+          self ! Error(reason)
+        case Success(unknowMessage) =>
+          log.warning("Camera responded with unknown message {}", unknowMessage)
+          self ! Error(unknowMessage.toString)
         case Failure(e) =>
-          log.debug(s"Router responded with error $e")
+          log.debug(s"Camera responded with error $e")
           log.error("Error occurred while waiting for response: {}", e)
           self ! GoToIdle
           requestor ! Error(e.getMessage)
-        case _ => log.debug(s"Unknown error happened")
       }
   }
 

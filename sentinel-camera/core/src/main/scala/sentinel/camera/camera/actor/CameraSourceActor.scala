@@ -1,13 +1,13 @@
 package sentinel.camera.camera.actor
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.Props
-import sentinel.camera.camera.graph.factory.CameraReaderGraphFactory
-import sentinel.camera.camera.graph.factory.SourceBroadCastFactory
+import akka.actor.{Actor, ActorLogging, Props}
+import sentinel.camera.camera.graph.factory.{CameraReaderGraphFactory, SourceBroadCastFactory}
+import sentinel.router.Messages
 import sentinel.router.Messages._
 
 object CameraSourceActor {
+
+  val Name = classOf[CameraSourceActor].getName
 
   def props(cameraReaderFactory: CameraReaderGraphFactory,
             broadcastFactory: SourceBroadCastFactory) = {

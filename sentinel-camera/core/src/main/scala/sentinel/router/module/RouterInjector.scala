@@ -14,11 +14,15 @@ class RouterInjector extends AbstractModule {
       .toProvider(classOf[MessageExecutionContextProvider])
 
     bind(classOf[ActorRef])
-      .annotatedWith(Names.named("PluginRouter"))
+      .annotatedWith(Names.named("PluginRouterFSM"))
       .toProvider(classOf[PluginRouterProvider])
 
     bind(classOf[ActorRef])
-      .annotatedWith(Names.named("Switch"))
+      .annotatedWith(Names.named("CameraFSM"))
+      .toProvider(classOf[CameraFSMProvider])
+
+    bind(classOf[ActorRef])
+      .annotatedWith(Names.named("SwitchFSM"))
       .toProvider(classOf[SwitchProvider])
   }
 }

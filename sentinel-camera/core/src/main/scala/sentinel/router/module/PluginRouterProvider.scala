@@ -10,7 +10,7 @@ import com.google.inject.name.Named
 import sentinel.camera.camera.graph.factory.CameraReaderGraphFactory
 import sentinel.camera.camera.graph.factory.SourceBroadCastFactory
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.PluginRouter
+import sentinel.router.PluginFSM
 
 import scala.concurrent.ExecutionContext
 
@@ -24,10 +24,10 @@ class PluginRouterProvider @Inject()(
 ) extends Provider[ActorRef] {
   override def get(): ActorRef = {
     val routees = SeveralRoutees(Vector.empty)
-    system.actorOf(PluginRouter.props(cameraSource,
-                                      BroadcastRoutingLogic(),
-                                      routees,
-                                      settings)(ec, system),
-                   "PluginRouter")
+    system.actorOf(PluginFSM.props(cameraSource,
+                                   BroadcastRoutingLogic(),
+                                   routees,
+                                   settings)(ec, system),
+                   PluginFSM.Name)
   }
 }

@@ -17,6 +17,5 @@ class CameraSourceProvider @Inject()(
 
   override def get(): ActorRef =
     system.actorOf(
-      CameraSourceActor.props(cameraReaderFactory, broadcastFactory),
-      "CameraSource")
+      CameraSourceActor.props(cameraReaderFactory, broadcastFactory))
 }

@@ -6,7 +6,6 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.FSM
 import akka.actor.Props
-import akka.pattern.ask
 import akka.routing.Router
 import akka.routing.RoutingLogic
 import akka.routing.SeveralRoutees
@@ -16,37 +15,40 @@ import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Failure
-import scala.util.Success
 
-object PluginRouter {
+object PluginFSM {
+
+  val Name = classOf[PluginFSM].getName
 
   def props(
       cameraSource: ActorRef,
       routingLogic: RoutingLogic,
       routees: SeveralRoutees,
       settings: Settings)(implicit ec: ExecutionContext, system: ActorSystem) =
-    Props(
-      new PluginRouter(cameraSource, routingLogic, routees, settings)(ec,
-                                                                      system))
+    Props(new PluginFSM(routingLogic, routees, settings)(ec, system))
 
 }
 
-class PluginRouter(cameraSource: ActorRef,
-                   routingLogic: RoutingLogic,
-                   routees: SeveralRoutees,
-                   settings: Settings)(implicit val ec: ExecutionContext,
-                                       val system: ActorSystem)
+/**
+  * Route Start/Stop messages to Plugins
+  *
+  * @param routingLogic
+  * @param routees
+  * @param settings
+  * @param ec
+  * @param system
+  */
+class PluginFSM(routingLogic: RoutingLogic,
+                routees: SeveralRoutees,
+                settings: Settings)(implicit val ec: ExecutionContext,
+                                    val system: ActorSystem)
     extends FSM[State, Request] {
 
-  private val routerTimeoutDuration =
-    settings.getDuration("system.options.routerTimeout", TimeUnit.SECONDS)
-  private val sourceTimeoutDuration =
-    settings.getDuration("system.options.sourceTimeout", TimeUnit.SECONDS)
-  private implicit val sourceTimeout = Timeout(sourceTimeoutDuration)
+  private implicit val pluginTimeout = Timeout(
+    settings.getDuration("system.options.pluginsTimeout", TimeUnit.SECONDS))
+  private lazy val numberOfRoutees = routees.routees.size - 1
 
   private val router = Router(routingLogic, routees.routees)
-
   startWith(Idle, Stop)
 
   when(Waiting) {
@@ -54,10 +56,6 @@ class PluginRouter(cameraSource: ActorRef,
       goto(Active) using NoRequest
 
     case Event(GoToIdle, _) =>
-      goto(Idle) using Stop
-
-    case Event(Error(reason), WaitingForSource(requestor, _)) =>
-      requestor ! Error(reason)
       goto(Idle) using Stop
 
     case Event(Ready(Ok), WaitingForRoutees(requestor, remainingResponses)) =>
@@ -69,18 +67,12 @@ class PluginRouter(cameraSource: ActorRef,
       if (remainingResponses == 0) self ! GoToIdle
       stay() using WaitingForRoutees(requestor, remainingResponses - 1)
 
-    case Event(SourceInit(broadcast), WaitingForSource(sender, Start(ks))) =>
-      startRoutees(broadcast, ks)
-      goto(Waiting) using WaitingForRoutees(sender, router.routees.size - 1)
-
-    case Event(Ready(Finished), WaitingForSource(sender, Stop)) =>
-      stopRoutees()
-      goto(Waiting) using WaitingForRoutees(sender, router.routees.size - 1)
-
     case Event(RouterTimeouted, WaitingForRoutees(requestor, _)) =>
       router.route(Stop, self)
-      log.error(s"Router timeouted after $routerTimeoutDuration")
-      requestor ! Error(s"Router timeouted after $routerTimeoutDuration")
+      log.error(s"Router timeouted after ${settings
+        .getDuration("system.options.pluginTimeout", TimeUnit.SECONDS)}")
+      requestor ! Error(s"Router timeouted after ${settings
+        .getDuration("system.options.pluginTimeout", TimeUnit.SECONDS)}")
       goto(Idle) using Stop
   }
 
@@ -101,10 +93,10 @@ class PluginRouter(cameraSource: ActorRef,
   private case object RouterTimeouted extends Request
 
   private def scheduleRouterTimeoutCheck =
-    system.scheduler.scheduleOnce(routerTimeoutDuration) {
+    system.scheduler.scheduleOnce(
+      settings.getDuration("system.options.pluginTimeout", TimeUnit.SECONDS)) {
       self ! RouterTimeouted
     }
-
   onTransition {
     case Waiting -> Active =>
       stateData match {
@@ -115,42 +107,24 @@ class PluginRouter(cameraSource: ActorRef,
       stateData match {
         case WaitingForRoutees(requestor, _) =>
           requestor ! Ready(Finished)
-        case WaitingForSource(_, _) =>
-          log.error("PluginRouter timeouted while waiting for source in state")
       }
   }
 
   when(Idle) {
-    case Event(Start(ks), _) =>
+    case Event(PluginStart(killSwitch, broadcast), _) =>
       log.debug("Start request")
-      askSource(Start(ks))
-      goto(Waiting) using WaitingForSource(sender, Start(ks))
-  }
-
-  private def askSource(request: Request) = {
-    log.debug(s"Ask source to $request")
-    ask(cameraSource, request)(sourceTimeout)
-      .mapTo[Response]
-      .onComplete {
-        case Success(request: Response) =>
-          log.debug(s"Source responded with $request")
-          self ! request
-        case Failure(e) =>
-          log.debug(s"Source responded with error $e")
-          log.error("Error occurred while waiting for response: {}", e)
-          self ! Error(e.getMessage)
-        case _ => log.debug(s"Unknown error happened")
-      }
+      startRoutees(broadcast, killSwitch)
+      goto(Waiting) using WaitingForRoutees(sender, numberOfRoutees)
   }
 
   when(Active) {
     case Event(Stop, _) =>
-      askSource(Stop)
-      goto(Waiting) using WaitingForSource(sender, Stop)
+      stopRoutees()
+      goto(Waiting) using WaitingForRoutees(sender, numberOfRoutees)
   }
 
   whenUnhandled {
-    case Event(Start(_), NoRequest) =>
+    case Event(PluginStart(_, _), NoRequest) =>
       log.error(AlreadyStarted)
       sender() ! Error(AlreadyStarted)
       stay

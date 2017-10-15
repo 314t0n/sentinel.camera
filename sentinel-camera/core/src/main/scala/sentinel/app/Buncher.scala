@@ -1,6 +1,5 @@
 package sentinel.app
 
-import java.rmi.UnexpectedException
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorRef
@@ -13,12 +12,10 @@ import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Promise
-import scala.util.Failure
-import scala.util.Success
+import scala.concurrent.{ExecutionContext, Promise}
+import scala.util.{Failure, Success}
 
-class Buncher @Inject()(@Named("Switch") switch: ActorRef, settings: Settings)(
+class Buncher @Inject()(@Named("SwitchFSM") switch: ActorRef, settings: Settings)(
   @Named("MessageExecutionContext") implicit val ec: ExecutionContext)
     extends LazyLogging {
 

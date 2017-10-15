@@ -3,9 +3,7 @@ package sentinel.router
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import akka.routing.ActorRefRoutee
 import akka.routing.BroadcastRoutingLogic
-import akka.routing.SeveralRoutees
 import akka.stream.KillSwitch
 import akka.testkit.ImplicitSender
 import akka.testkit.TestFSMRef
@@ -26,7 +24,7 @@ import testutils.TestSystem.TestActorSystem
 
 import scala.concurrent.duration._
 
-class PluginRouterSpec
+class CameraFSMSpec
     extends TestKit(ActorSystem(TestActorSystem))
     with ImplicitSender
     with WordSpecLike
@@ -39,11 +37,7 @@ class PluginRouterSpec
   private implicit val ec  = system.dispatcher
   private val routingLogic = BroadcastRoutingLogic()
   private val cameraSource = TestProbe()
-  private val routeeA      = TestProbe()
-  private val routeeB      = TestProbe()
-  private val routees      = Vector(routeeA, routeeB)
-  private val severalRoutees = SeveralRoutees(
-    routees.map(_.ref).map(ActorRefRoutee))
+  private val router       = TestProbe()
 
   private val killSwitch = mock[KillSwitch]
   private val broadcast  = mock[CameraSourcePublisher]
@@ -52,13 +46,13 @@ class PluginRouterSpec
     .thenReturn(50 milliseconds)
 
   private val underTest = TestFSMRef(
-    new PluginRouter(cameraSource.ref, routingLogic, severalRoutees, settings))
+    new CameraFSM(cameraSource.ref, router.ref, settings))
 
-  "PluginRouter" when {
+  "CameraFSM" when {
 
     "happy path" should {
 
-      "be Idle by defautl" in {
+      "state is Idle by default" in {
         underTest.stateName shouldBe Idle
       }
 
@@ -67,26 +61,8 @@ class PluginRouterSpec
 
         cameraSource.expectMsg(Start(killSwitch))
         cameraSource.reply(SourceInit(broadcast))
-        routees foreach { routee =>
-          routee.expectMsg(PluginStart(killSwitch, broadcast))
-          routee.reply(Ready(Ok))
-        }
-        expectMsg(Ready(Ok))
-        underTest.stateName shouldBe Active
-        verifyZeroInteractions(killSwitch)
-      }
-
-      "switch from Idle to Active when no routees added" in {
-        val underTest = TestFSMRef(
-          new PluginRouter(cameraSource.ref,
-                           routingLogic,
-                           SeveralRoutees(Vector.empty),
-                           settings))
-
-        underTest ! Start(killSwitch)
-
-        cameraSource.expectMsg(Start(killSwitch))
-        cameraSource.reply(SourceInit(broadcast))
+        router.expectMsg(PluginStart(killSwitch, broadcast))
+        router.reply(Ready(Ok))
         expectMsg(Ready(Ok))
         underTest.stateName shouldBe Active
         verifyZeroInteractions(killSwitch)
@@ -97,49 +73,25 @@ class PluginRouterSpec
 
         underTest ! Stop
 
-        cameraSource.expectMsg(Stop)
-        cameraSource.reply(Ready(Finished))
-        routees foreach { r =>
-          r.expectMsg(Stop)
-          r.reply(Ready(Finished))
+        router.expectMsg(Stop)
+        router.reply(Ready(Finished))
+        expectMsg(Ready(Finished))
+        eventually {
+          underTest.stateName shouldBe Idle
         }
-        expectMsg(Ready(Finished))
-        underTest.stateName shouldBe Idle
-        verifyZeroInteractions(killSwitch)
-      }
-
-      "switch from Active to Idle when no routees added" in {
-        val underTest = TestFSMRef(
-          new PluginRouter(cameraSource.ref,
-                           routingLogic,
-                           SeveralRoutees(Vector.empty),
-                           settings))
-        underTest ! Start(killSwitch)
-        cameraSource.expectMsg(Start(killSwitch))
-        cameraSource.reply(SourceInit(broadcast))
-        expectMsg(Ready(Ok))
-
-        underTest ! Stop
-
-        cameraSource.expectMsg(Stop)
-        cameraSource.reply(Ready(Finished))
-        expectMsg(Ready(Finished))
-        underTest.stateName shouldBe Idle
         verifyZeroInteractions(killSwitch)
       }
     }
 
     "error handling" when {
 
-      "routees timeout handled" when {
+      "router timeout handled" when {
         "switch from Idle to Active" in {
           underTest ! Start(killSwitch)
 
           cameraSource.expectMsg(Start(killSwitch))
           cameraSource.reply(SourceInit(broadcast))
-          routees foreach { routee =>
-            routee.expectMsg(PluginStart(killSwitch, broadcast))
-          }
+          router.expectMsg(PluginStart(killSwitch, broadcast))
           expectMsgAnyClassOf(4 seconds, classOf[Error])
           eventually {
             underTest.stateName shouldBe Idle
@@ -152,11 +104,7 @@ class PluginRouterSpec
 
           underTest ! Stop
 
-          cameraSource.expectMsg(Stop)
-          cameraSource.reply(Ready(Finished))
-          routees foreach { routee =>
-            routee.expectMsg(Stop)
-          }
+          router.expectMsg(Stop)
           expectMsgAnyClassOf(4 seconds, classOf[Error])
           eventually {
             underTest.stateName shouldBe Idle
@@ -183,8 +131,6 @@ class PluginRouterSpec
           setActiveState()
 
           underTest ! Stop
-
-          cameraSource.expectMsg(Stop)
 
           expectMsgAnyClassOf(3 seconds, classOf[Error])
           eventually {
@@ -219,10 +165,9 @@ class PluginRouterSpec
     underTest ! Start(killSwitch)
     cameraSource.expectMsg(Start(killSwitch))
     cameraSource.reply(SourceInit(broadcast))
-    routees foreach { routee =>
-      routee.expectMsg(PluginStart(killSwitch, broadcast))
-      routee.reply(Ready(Ok))
-    }
+    router.expectMsg(PluginStart(killSwitch, broadcast))
+    router.reply(Ready(Ok))
     expectMsg(Ready(Ok))
   }
+
 }
