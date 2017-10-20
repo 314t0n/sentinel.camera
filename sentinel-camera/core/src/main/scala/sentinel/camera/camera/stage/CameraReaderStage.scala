@@ -3,11 +3,15 @@ package sentinel.camera.camera.stage
 import akka.stream._
 import akka.stream.stage._
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacv.{Frame, FrameGrabber}
+import org.bytedeco.javacv.Frame
+import org.bytedeco.javacv.FrameGrabber
+import sentinel.router.Messages.Error
 
 import scala.util.Try
 
-class CameraReaderStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Frame]] with LazyLogging {
+class CameraReaderStage(grabber: FrameGrabber)
+    extends GraphStage[SourceShape[Frame]]
+    with LazyLogging {
 
   val out = Outlet[Frame]("Camera.out")
 
@@ -15,7 +19,8 @@ class CameraReaderStage(grabber: FrameGrabber) extends GraphStage[SourceShape[Fr
     new GraphStageLogic(shape) {
 
       setHandler(out, new OutHandler {
-        override def onPull(): Unit = grabFrame().get.foreach(frame => push(out, frame))
+        override def onPull(): Unit =
+          grabFrame().get.foreach(frame => push(out, frame))
       })
 
       override def postStop(): Unit = {

@@ -34,7 +34,7 @@ class CameraSourceActorSpec
   private val broadcastFactory                            = mock[SourceBroadCastFactory]
   private val sourceFactory                               = mock[CameraReaderGraphFactory]
   private val underTest = TestActorRef(
-    Props(new CameraSourceActor(sourceFactory, broadcastFactory)))
+    Props(new CameraSourceActor(sourceFactory, broadcastFactory, null)))
 
   "CameraActorSpec" when {
 

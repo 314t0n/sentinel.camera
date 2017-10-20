@@ -46,6 +46,8 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(
     case Event(GoToActive, _) =>
       log.debug("Active")
       goto(Active)
+    case Event(Error, _) =>
+      goto(Idle)
     case Event(GoToIdle, _) =>
       goto(Idle)
   }
@@ -66,7 +68,7 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(
   private def askRouter(request: Request,
                         nextState: Request,
                         requestor: ActorRef) = {
-    log.debug(s"Ask camera to $request")
+    log.debug("{} request sent to camera, timeout: {}", request, timeout)
     ask(camera, request)
       .mapTo[Response]
       .onComplete {
@@ -76,6 +78,7 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(
           requestor ! Ready(msg)
         case Success(Error(reason)) =>
           log.error("Camera responded with error message {}", reason)
+          requestor ! Error(reason)
           self ! Error(reason)
         case Success(unknowMessage) =>
           log.warning("Camera responded with unknown message {}", unknowMessage)
