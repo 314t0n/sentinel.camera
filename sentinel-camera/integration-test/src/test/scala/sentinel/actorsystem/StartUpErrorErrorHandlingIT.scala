@@ -8,11 +8,11 @@ import org.scalatest.Matchers
 import org.scalatest.OneInstancePerTest
 import sentinel.app.Buncher
 import sentinel.router.Messages.Error
-import testutils.StartUpFixture
+import testutils.StartUpErrorFixture
 import testutils.StopSystemAfterAll
 
-class StartUpErrorHandling
-    extends StartUpFixture
+class StartUpErrorErrorHandlingIT
+    extends StartUpErrorFixture
     with ImplicitSender
     with AsyncWordSpecLike
     with OneInstancePerTest

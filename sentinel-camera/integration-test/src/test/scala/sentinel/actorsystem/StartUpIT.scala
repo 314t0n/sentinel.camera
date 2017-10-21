@@ -8,14 +8,14 @@ import org.scalatest.mockito.MockitoSugar
 import sentinel.app.Buncher
 import sentinel.router.Messages.Finished
 import sentinel.router.Messages.Ready
-import testutils.BuncherITFixture
+import testutils.StartUpFixture
 import testutils.StopSystemAfterAll
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class BuncherSetupIt
-    extends BuncherITFixture
+class StartUpIT
+    extends StartUpFixture
     with ImplicitSender
     with AsyncWordSpecLike
     with OneInstancePerTest
@@ -26,11 +26,11 @@ class BuncherSetupIt
   "Start" should {
 
     "happy path" in {
-      val buncher = injector.getInstance(classOf[Buncher])
+      val buncher = modules.injector.getInstance(classOf[Buncher])
 
       val start = buncher.start()
 
-      Await.ready(start.future, 6 seconds)
+      Await.ready(start.future, 10 seconds)
 
       val stop = buncher.stop()
 

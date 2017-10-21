@@ -34,7 +34,7 @@ class CameraReaderGraphFactoryProvider @Inject()(
 
   private def createRawCameraSource() = {
     logger.debug("Creating grabber")
-    lazy val grabber = frameGrabberBuilder.create()
+    val grabber = frameGrabberBuilder.create()
     Source.fromGraph(new CameraReaderStage(grabber))
   }
 
