@@ -5,6 +5,7 @@ import akka.stream.KillSwitch
 import akka.stream.scaladsl.RunnableGraph
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.camera.camera.graph.SourceBroadCast
+import sentinel.camera.camera.reader.BroadCastRunnableGraph
 
 object Messages {
 
@@ -16,7 +17,7 @@ object Messages {
 
   case class Start(ks: KillSwitch) extends Request
 
-  case class PluginStart(ks: KillSwitch, broadcast: CameraSourcePublisher) extends Request
+  case class PluginStart(ks: KillSwitch, broadcast: BroadCastRunnableGraph) extends Request
 
   case object NoRequest extends Request
 
@@ -37,8 +38,6 @@ object Messages {
 
   case class Error(reason: String) extends Response
 
-  case class SourceInit(broadCast: CameraSourcePublisher) extends Response
-
-  case class CameraSourcePublisher(publisher: RunnableGraph[CameraSource])
+  case class SourceInit(broadCast: BroadCastRunnableGraph) extends Response
 
 }

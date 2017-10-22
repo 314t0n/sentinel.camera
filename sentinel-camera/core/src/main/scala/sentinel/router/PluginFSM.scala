@@ -11,6 +11,7 @@ import akka.routing.RoutingLogic
 import akka.routing.SeveralRoutees
 import akka.stream.KillSwitch
 import akka.util.Timeout
+import sentinel.camera.camera.reader.BroadCastRunnableGraph
 import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
 
@@ -83,7 +84,7 @@ class PluginFSM(routingLogic: RoutingLogic,
     } else self ! GoToIdle
   }
 
-  private def startRoutees(broadcast: CameraSourcePublisher, ks: KillSwitch) = {
+  private def startRoutees(broadcast: BroadCastRunnableGraph, ks: KillSwitch) = {
     if (routees.routees.nonEmpty) {
       router.route(PluginStart(ks, broadcast), self)
       scheduleRouterTimeoutCheck

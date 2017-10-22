@@ -17,6 +17,7 @@ import org.scalatest.OneInstancePerTest
 import org.scalatest.WordSpecLike
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
+import sentinel.camera.camera.reader.BroadCastRunnableGraph
 import sentinel.camera.utils.settings.Settings
 import sentinel.router.Messages._
 import testutils.StopSystemAfterAll
@@ -40,7 +41,7 @@ class CameraFSMSpec
   private val router       = TestProbe()
 
   private val killSwitch = mock[KillSwitch]
-  private val broadcast  = mock[CameraSourcePublisher]
+  private val broadcast  = mock[BroadCastRunnableGraph]
   private val settings   = mock[Settings]
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)
