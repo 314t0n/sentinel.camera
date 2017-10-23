@@ -2,12 +2,12 @@ package sentinel.actorsystem
 
 import akka.testkit.ImplicitSender
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.AsyncWordSpecLike
 import org.scalatest.Matchers
 import org.scalatest.OneInstancePerTest
+import org.scalatest.mockito.MockitoSugar
 import sentinel.app.Buncher
-import sentinel.router.Messages.Error
+import sentinel.router.messages._
 import testutils.StartUpErrorFixture
 import testutils.StopSystemAfterAll
 
@@ -23,8 +23,9 @@ class StartUpErrorErrorHandlingIT
   "error handling when IO is not available" in {
     val buncher = injector.getInstance(classOf[Buncher])
 
-    when(grabber.start()).thenThrow(new RuntimeException(
-      "avformat_open_input() error -5: Could not open input video=Webcam. (Has setFormat() been called?"))
+    when(grabber.start()).thenThrow(
+      new RuntimeException(
+        "avformat_open_input() error -5: Could not open input video=Webcam. (Has setFormat() been called?"))
 
     val start = buncher.start()
 

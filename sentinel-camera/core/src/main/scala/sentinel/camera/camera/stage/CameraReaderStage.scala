@@ -5,7 +5,7 @@ import akka.stream.stage._
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.Frame
 import org.bytedeco.javacv.FrameGrabber
-import sentinel.router.Messages.Error
+import sentinel.router.messages.Messages.Error
 
 import scala.util.Try
 

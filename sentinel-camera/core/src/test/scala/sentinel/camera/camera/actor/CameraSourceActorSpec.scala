@@ -1,15 +1,23 @@
 package sentinel.camera.camera.actor
 
-import akka.actor.{ActorSystem, Props}
-import akka.stream.{ActorMaterializer, KillSwitch}
+import akka.actor.ActorSystem
+import akka.actor.Props
 import akka.stream.scaladsl.RunnableGraph
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
-import org.scalatest.{OneInstancePerTest, WordSpecLike}
+import akka.stream.ActorMaterializer
+import akka.stream.KillSwitch
+import akka.testkit.ImplicitSender
+import akka.testkit.TestActorRef
+import akka.testkit.TestKit
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.OneInstancePerTest
+import org.scalatest.WordSpecLike
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
-import sentinel.camera.camera.reader.{BroadCastRunnableGraph, BroadcastMateralizer}
-import sentinel.router.Messages._
+import sentinel.camera.camera.reader.BroadCastRunnableGraph
+import sentinel.camera.camera.reader.BroadcastMateralizer
+import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
@@ -29,8 +37,7 @@ class CameraSourceActorSpec
   private val broadcastDummy                     = BroadCastRunnableGraph(graph)
   private val broadCastMateralizer               = mock[BroadcastMateralizer]
   private val underTest =
-    TestActorRef(
-      Props(new CameraSourceActor(broadCastMateralizer)(materializer)))
+    TestActorRef(Props(new CameraSourceActor(broadCastMateralizer)(materializer)))
 
   private val promise = Promise[BroadCastRunnableGraph]()
 

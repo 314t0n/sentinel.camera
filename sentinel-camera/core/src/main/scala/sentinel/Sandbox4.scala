@@ -76,23 +76,23 @@ object Sandbox4 extends App with LazyLogging {
   }
 
 
-  sealed trait State
+  private sealed trait State
 
-  case object Idle extends State
+  private case object Idle extends State
 
-  case object Active extends State
+  private case object Active extends State
 
-  sealed trait Command
+  private sealed trait Command
 
-  case object Uninitialized extends Command
+  private case object Uninitialized extends Command
 
-  case class Start(ks: SharedKillSwitch) extends Command
+  private case class Start(ks: SharedKillSwitch) extends Command
 
-  case object Stop extends Command
+  private case object Stop extends Command
 
-  case object Restart extends Command
+  private case object Restart extends Command
 
-  class Buncher(factory: Factory) extends FSM[State, Command] {
+  private class Buncher(factory: Factory) extends FSM[State, Command] {
 
     startWith(Idle, Stop)
 

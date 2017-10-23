@@ -10,7 +10,8 @@ import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpecLike}
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages._
+import sentinel.router.messages.Messages._
+import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 

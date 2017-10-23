@@ -1,16 +1,12 @@
 package sentinel.actorsystem
 
 import akka.testkit.ImplicitSender
-import org.scalatest.AsyncWordSpecLike
-import org.scalatest.GivenWhenThen
-import org.scalatest.Matchers
-import org.scalatest.OneInstancePerTest
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{AsyncWordSpecLike, GivenWhenThen, Matchers, OneInstancePerTest}
 import sentinel.app.Buncher
-import sentinel.router.Messages
-import sentinel.router.Messages.{Finished, Ok, Ready}
-import testutils.StartUpFixture
-import testutils.StopSystemAfterAll
+import sentinel.router.messages.Messages.{Finished, Ok}
+import sentinel.router.messages.Ready
+import testutils.{StartUpFixture, StopSystemAfterAll}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

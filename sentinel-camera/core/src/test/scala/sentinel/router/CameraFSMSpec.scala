@@ -19,7 +19,8 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages._
+import sentinel.router.messages.Messages._
+import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
@@ -46,8 +47,7 @@ class CameraFSMSpec
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)
 
-  private val underTest = TestFSMRef(
-    new CameraFSM(cameraSource.ref, router.ref, settings))
+  private val underTest = TestFSMRef(new CameraFSM(cameraSource.ref, router.ref, settings))
 
   "CameraFSM" when {
 

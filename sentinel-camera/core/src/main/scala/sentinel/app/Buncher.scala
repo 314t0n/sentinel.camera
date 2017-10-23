@@ -10,13 +10,18 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages._
+import sentinel.router.messages.Request
+import sentinel.router.messages.Response
+import sentinel.router.messages.Start
+import sentinel.router.messages.Stop
 
-import scala.concurrent.{ExecutionContext, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Promise
+import scala.util.Failure
+import scala.util.Success
 
 class Buncher @Inject()(@Named("SwitchFSM") switch: ActorRef, settings: Settings)(
-  @Named("MessageExecutionContext") implicit val ec: ExecutionContext)
+    @Named("MessageExecutionContext") implicit val ec: ExecutionContext)
     extends LazyLogging {
 
   private val duration =
@@ -41,9 +46,7 @@ class Buncher @Inject()(@Named("SwitchFSM") switch: ActorRef, settings: Settings
         case Success(message) =>
           promise success message
         case Failure(e) =>
-          logger.error(
-            s"Error occurred while waiting for response: ${e.getMessage}",
-            e)
+          logger.error(s"Error occurred while waiting for response: ${e.getMessage}", e)
           promise failure e
       }
     promise

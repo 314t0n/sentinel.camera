@@ -3,27 +3,20 @@ package sentinel.app
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.stream.KillSwitch
 import akka.testkit.ImplicitSender
-import akka.testkit.TestActorRef
-import akka.testkit.TestFSMRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import org.mockito.Matchers.any
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest._
+import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages._
+import sentinel.router.messages.Messages._
+import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
 import scala.concurrent.duration._
-import scala.util.Try
 
 class BuncherSpec
     extends TestKit(ActorSystem(TestActorSystem))

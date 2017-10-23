@@ -2,25 +2,21 @@ package sentinel.router
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorRef
-import akka.actor.FSM
-import akka.actor.Props
+import akka.actor.{ActorRef, FSM, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages.Stop
-import sentinel.router.Messages._
+import sentinel.router.messages.Messages._
+import sentinel.router.messages._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 object SwitchFSM {
 
   val Name = classOf[SwitchFSM].getName
 
-  def props(camera: ActorRef, settings: Settings)(
-      implicit ec: ExecutionContext) =
+  def props(camera: ActorRef, settings: Settings)(implicit ec: ExecutionContext) =
     Props(new SwitchFSM(camera, settings))
 
 }
@@ -32,9 +28,7 @@ object SwitchFSM {
   *
   * @param camera
   */
-class SwitchFSM(camera: ActorRef, settings: Settings)(
-    implicit val ec: ExecutionContext)
-    extends FSM[State, Request] {
+class SwitchFSM(camera: ActorRef, settings: Settings)(implicit val ec: ExecutionContext) extends FSM[State, Request] {
 
   private val duration =
     settings.getDuration("system.options.startUpTimeout", TimeUnit.SECONDS)
@@ -65,9 +59,7 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(
       goto(Waiting)
   }
 
-  private def askRouter(request: Request,
-                        nextState: Request,
-                        requestor: ActorRef) = {
+  private def askRouter(request: Request, nextState: Request, requestor: ActorRef) = {
     log.debug("{} request sent to camera, timeout: {}", request, timeout)
     ask(camera, request)
       .mapTo[Response]
@@ -97,8 +89,7 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(
         case Start(ks) =>
           ks.shutdown()
         case _ =>
-          log.warning("received unhandled request {} in state Active",
-                      stateName)
+          log.warning("received unhandled request {} in state Active", stateName)
       }
   }
 
@@ -112,10 +103,7 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(
       sender() ! Error(Finished)
       stay
     case Event(e, s) =>
-      log.warning("received unhandled request {} in state {}/{}",
-                  e,
-                  stateName,
-                  s)
+      log.warning("received unhandled request {} in state {}/{}", e, stateName, s)
       stay
   }
 

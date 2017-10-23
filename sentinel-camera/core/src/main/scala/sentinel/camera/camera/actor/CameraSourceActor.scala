@@ -1,18 +1,24 @@
 package sentinel.camera.camera.actor
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import akka.actor.Props
 import akka.stream._
 import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.camera.reader.BroadcastMateralizer
-import sentinel.router.Messages._
+import sentinel.router.messages.Error
+import sentinel.router.messages.SourceInit
+import sentinel.router.messages.Start
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object CameraSourceActor {
   val Name = classOf[CameraSourceActor].getName
 
-  def props(broadCastMateralizer: BroadcastMateralizer,
-            materalizer: ActorMaterializer) = {
+  def props(broadCastMateralizer: BroadcastMateralizer, materalizer: ActorMaterializer) = {
     Props(new CameraSourceActor(broadCastMateralizer)(materalizer))
   }
 }
@@ -22,8 +28,7 @@ object CameraSourceActor {
   *
   * @param broadCastMateralizer factory to materalize broadcast stream from source
   */
-class CameraSourceActor(broadCastMateralizer: BroadcastMateralizer)(
-    implicit val materalizer: ActorMaterializer)
+class CameraSourceActor(broadCastMateralizer: BroadcastMateralizer)(implicit val materalizer: ActorMaterializer)
     extends Actor
     with ActorLogging
     with LazyLogging {

@@ -3,25 +3,18 @@ package sentinel.router
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import akka.routing.ActorRefRoutee
-import akka.routing.BroadcastRoutingLogic
-import akka.routing.SeveralRoutees
+import akka.routing.{ActorRefRoutee, BroadcastRoutingLogic, SeveralRoutees}
 import akka.stream.KillSwitch
-import akka.testkit.ImplicitSender
-import akka.testkit.TestFSMRef
-import akka.testkit.TestKit
-import akka.testkit.TestProbe
+import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
 import org.mockito.Matchers.any
-import org.mockito.Mockito.verifyZeroInteractions
-import org.mockito.Mockito.when
-import org.scalatest.Matchers
-import org.scalatest.OneInstancePerTest
-import org.scalatest.WordSpecLike
+import org.mockito.Mockito.{verifyZeroInteractions, when}
+import org.scalatest.{Matchers, OneInstancePerTest, WordSpecLike}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages._
+import sentinel.router.messages.Messages._
+import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
@@ -37,13 +30,12 @@ class PluginFSMSpec
     with Eventually
     with MockitoSugar {
 
-  private implicit val ec  = system.dispatcher
-  private val routingLogic = BroadcastRoutingLogic()
-  private val routeeA      = TestProbe()
-  private val routeeB      = TestProbe()
-  private val routees      = Vector(routeeA, routeeB)
-  private val severalRoutees = SeveralRoutees(
-    routees.map(_.ref).map(ActorRefRoutee))
+  private implicit val ec    = system.dispatcher
+  private val routingLogic   = BroadcastRoutingLogic()
+  private val routeeA        = TestProbe()
+  private val routeeB        = TestProbe()
+  private val routees        = Vector(routeeA, routeeB)
+  private val severalRoutees = SeveralRoutees(routees.map(_.ref).map(ActorRefRoutee))
 
   private val killSwitch = mock[KillSwitch]
   private val broadcast  = mock[BroadCastRunnableGraph]
@@ -51,8 +43,7 @@ class PluginFSMSpec
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)
 
-  private val underTest = TestFSMRef(
-    new PluginFSM(routingLogic, severalRoutees, settings))
+  private val underTest = TestFSMRef(new PluginFSM(routingLogic, severalRoutees, settings))
 
   "PluginFSM " when {
 
@@ -75,10 +66,7 @@ class PluginFSMSpec
       }
 
       "switch from Idle to Active when no routees added" in {
-        val underTest = TestFSMRef(
-          new PluginFSM(routingLogic,
-                           SeveralRoutees(Vector.empty),
-                           settings))
+        val underTest = TestFSMRef(new PluginFSM(routingLogic, SeveralRoutees(Vector.empty), settings))
 
         underTest ! PluginStart(killSwitch, broadcast)
 
@@ -102,10 +90,7 @@ class PluginFSMSpec
       }
 
       "switch from Active to Idle when no routees added" in {
-        val underTest = TestFSMRef(
-          new PluginFSM(routingLogic,
-                           SeveralRoutees(Vector.empty),
-                           settings))
+        val underTest = TestFSMRef(new PluginFSM(routingLogic, SeveralRoutees(Vector.empty), settings))
         underTest ! PluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
 

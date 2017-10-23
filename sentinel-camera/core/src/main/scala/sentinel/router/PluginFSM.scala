@@ -13,7 +13,8 @@ import akka.stream.KillSwitch
 import akka.util.Timeout
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
 import sentinel.camera.utils.settings.Settings
-import sentinel.router.Messages._
+import sentinel.router.messages.Messages._
+import sentinel.router.messages._
 
 import scala.concurrent.ExecutionContext
 
@@ -90,8 +91,6 @@ class PluginFSM(routingLogic: RoutingLogic,
       scheduleRouterTimeoutCheck
     } else self ! GoToActive
   }
-
-  private case object RouterTimeouted extends Request
 
   private def scheduleRouterTimeoutCheck =
     system.scheduler.scheduleOnce(
