@@ -14,20 +14,16 @@ import sentinel.router.PluginFSM
 
 import scala.concurrent.ExecutionContext
 
-class PluginRouterProvider @Inject()(
+class PluginFSMProvider @Inject()(
     system: ActorSystem,
     settings: Settings,
-    broadcastFactory: SourceBroadCastFactory,
     @Named("CameraReaderFactory") cameraReaderFactory: CameraReaderGraphFactory,
-    @Named("CameraSource") cameraSource: ActorRef,
+    @Named("RouterFSM") router: ActorRef,
     @Named("MessageExecutionContext") ec: ExecutionContext
 ) extends Provider[ActorRef] {
   override def get(): ActorRef = {
     val routees = SeveralRoutees(Vector.empty)
-    system.actorOf(PluginFSM.props(cameraSource,
-                                   BroadcastRoutingLogic(),
-                                   routees,
-                                   settings)(ec, system),
+    system.actorOf(PluginFSM.props(router, settings)(ec, system),
                    PluginFSM.Name)
   }
 }

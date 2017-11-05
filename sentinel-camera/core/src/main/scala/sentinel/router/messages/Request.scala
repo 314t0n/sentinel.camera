@@ -10,6 +10,8 @@ case object NoRequest extends Request
 
 case object Stop extends Request
 
+case object Started extends Request
+
 case class Start(ks: KillSwitch) extends Request
 
 case class PluginStart(ks: KillSwitch, broadcast: BroadCastRunnableGraph) extends Request

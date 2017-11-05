@@ -22,35 +22,26 @@ object PluginFSM {
 
   val Name = classOf[PluginFSM].getName
 
-  def props(
-      cameraSource: ActorRef,
-      routingLogic: RoutingLogic,
-      routees: SeveralRoutees,
-      settings: Settings)(implicit ec: ExecutionContext, system: ActorSystem) =
-    Props(new PluginFSM(routingLogic, routees, settings)(ec, system))
+  def props(router: ActorRef, settings: Settings)(
+      implicit ec: ExecutionContext,
+      system: ActorSystem) =
+    Props(new PluginFSM(router, settings)(ec, system))
 
 }
 
 /**
   * Route Start/Stop messages to Plugins
   *
-  * @param routingLogic
-  * @param routees
+  * @param router RouterFSM
   * @param settings
   * @param ec
   * @param system
   */
-class PluginFSM(routingLogic: RoutingLogic,
-                routees: SeveralRoutees,
-                settings: Settings)(implicit val ec: ExecutionContext,
-                                    val system: ActorSystem)
+@deprecated
+class PluginFSM(router: ActorRef, settings: Settings)(implicit val ec: ExecutionContext, val system: ActorSystem)
     extends FSM[State, Request] {
 
-  private implicit val pluginTimeout = Timeout(
-    settings.getDuration("system.options.pluginsTimeout", TimeUnit.SECONDS))
-  private lazy val numberOfRoutees = routees.routees.size - 1
-
-  private val router = Router(routingLogic, routees.routees)
+  private implicit val pluginTimeout = Timeout(settings.getDuration("system.options.pluginsTimeout", TimeUnit.SECONDS))
   startWith(Idle, Stop)
 
   when(Waiting) {
@@ -64,13 +55,12 @@ class PluginFSM(routingLogic: RoutingLogic,
       if (remainingResponses == 0) self ! GoToActive
       stay() using WaitingForRoutees(requestor, remainingResponses - 1)
 
-    case Event(Ready(Finished),
-               WaitingForRoutees(requestor, remainingResponses)) =>
+    case Event(Ready(Finished), WaitingForRoutees(requestor, remainingResponses)) =>
       if (remainingResponses == 0) self ! GoToIdle
       stay() using WaitingForRoutees(requestor, remainingResponses - 1)
 
     case Event(RouterTimeouted, WaitingForRoutees(requestor, _)) =>
-      router.route(Stop, self)
+      //      router.route(Stop, self)
       log.error(s"Router timeouted after ${settings
         .getDuration("system.options.pluginTimeout", TimeUnit.SECONDS)}")
       requestor ! Error(s"Router timeouted after ${settings
@@ -78,25 +68,16 @@ class PluginFSM(routingLogic: RoutingLogic,
       goto(Idle) using Stop
   }
 
-  private def stopRoutees() = {
-    if (routees.routees.nonEmpty) {
-      router.route(Stop, self)
-      // TODO: check why routee timeout missing here
-    } else self ! GoToIdle
-  }
-
   private def startRoutees(broadcast: BroadCastRunnableGraph, ks: KillSwitch) = {
-    if (routees.routees.nonEmpty) {
-      router.route(PluginStart(ks, broadcast), self)
-      scheduleRouterTimeoutCheck
-    } else self ! GoToActive
+    router ! PluginStart(ks, broadcast)
+    scheduleRouterTimeoutCheck
   }
 
   private def scheduleRouterTimeoutCheck =
-    system.scheduler.scheduleOnce(
-      settings.getDuration("system.options.pluginTimeout", TimeUnit.SECONDS)) {
+    system.scheduler.scheduleOnce(settings.getDuration("system.options.pluginTimeout", TimeUnit.SECONDS)) {
       self ! RouterTimeouted
     }
+
   onTransition {
     case Waiting -> Active =>
       stateData match {
@@ -114,13 +95,13 @@ class PluginFSM(routingLogic: RoutingLogic,
     case Event(PluginStart(killSwitch, broadcast), _) =>
       log.debug("Start request")
       startRoutees(broadcast, killSwitch)
-      goto(Waiting) using WaitingForRoutees(sender, numberOfRoutees)
+      goto(Waiting) using WaitingForRoutees(sender, 1)
   }
 
   when(Active) {
     case Event(Stop, _) =>
-      stopRoutees()
-      goto(Waiting) using WaitingForRoutees(sender, numberOfRoutees)
+      router ! Stop
+      goto(Waiting) using WaitingForRoutees(sender, 1)
   }
 
   whenUnhandled {
@@ -133,11 +114,7 @@ class PluginFSM(routingLogic: RoutingLogic,
       sender() ! Error(Finished)
       stay
     case Event(e, s) =>
-      log.warning("received unhandled request {} in state {}/{}, sender: {}",
-                  e,
-                  stateName,
-                  s,
-                  sender)
+      log.warning("received unhandled request {} in state {}/{}, sender: {}", e, stateName, s, sender)
       stay
   }
 

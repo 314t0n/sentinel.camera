@@ -13,9 +13,9 @@ class RouterInjector extends AbstractModule {
       .annotatedWith(Names.named("MessageExecutionContext"))
       .toProvider(classOf[MessageExecutionContextProvider])
 
-    bind(classOf[ActorRef])
-      .annotatedWith(Names.named("PluginRouterFSM"))
-      .toProvider(classOf[PluginRouterProvider])
+       bind(classOf[ActorRef])
+      .annotatedWith(Names.named("RouterFSM"))
+      .toProvider(classOf[RouterFSMProvider])
 
     bind(classOf[ActorRef])
       .annotatedWith(Names.named("CameraFSM"))

@@ -11,10 +11,11 @@ import scala.concurrent.ExecutionContext
 class CameraFSMProvider @Inject()(
     system: ActorSystem,
     settings: Settings,
-    @Named("PluginRouterFSM") router: ActorRef,
+    @Named("RouterFSM") router: ActorRef,
     @Named("CameraSource") cameraSource: ActorRef,
     @Named("MessageExecutionContext") ec: ExecutionContext
 ) extends Provider[ActorRef] {
+
   override def get(): ActorRef = {
     system.actorOf(CameraFSM.props(cameraSource, router, settings)(ec, system),
                    CameraFSM.Name)
