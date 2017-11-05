@@ -9,6 +9,7 @@ import sentinel.router.RouterFSM
 
 class RouterFSMProvider @Inject()(system: ActorSystem, settings: Settings) extends Provider[ActorRef] {
 
-  override def get(): ActorRef = system.actorOf(RouterFSM.props(settings)(system), RouterFSM.Name)
+  override def get(): ActorRef =
+    system.actorOf(RouterFSM.props(settings)(system), RouterFSM.Name)
 
 }

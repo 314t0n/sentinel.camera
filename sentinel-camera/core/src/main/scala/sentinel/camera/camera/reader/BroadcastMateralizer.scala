@@ -3,7 +3,7 @@ package sentinel.camera.camera.reader
 import akka.Done
 import akka.stream.ActorMaterializer
 import akka.stream.KillSwitch
-import akka.stream.scaladsl.RunnableGraph
+import akka.stream.scaladsl.{RunnableGraph, Sink}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import sentinel.camera.camera.graph.CameraReaderGraph
@@ -51,7 +51,7 @@ class BroadcastMateralizer @Inject()(
 
   private def awaitBroadcastStartUp(broadcast: BroadCastRunnableGraph,
                           promise: Promise[BroadCastRunnableGraph]) = {
-    val broadcastStream = broadcast.toFuture()
+    val broadcastStream = broadcast.mat.runWith(Sink.ignore)
 
     broadcastStream.onComplete {
       case Success(Done) =>

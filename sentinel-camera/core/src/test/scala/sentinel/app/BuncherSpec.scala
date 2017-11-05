@@ -29,10 +29,11 @@ class BuncherSpec
 
   private implicit val ec = system.dispatcher
   private val switch      = TestProbe()
+  private val router      = TestProbe()
   private val settings    = mock[Settings]
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)
-  private val underTest = new Buncher(switch.ref, settings)
+  private val underTest = new Buncher(switch.ref,router.ref, settings)
 
   "Buncher" when {
 

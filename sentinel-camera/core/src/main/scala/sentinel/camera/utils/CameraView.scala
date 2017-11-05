@@ -5,24 +5,26 @@ import java.awt.event.WindowAdapter
 import javax.swing.JButton
 import javax.swing.JFrame.EXIT_ON_CLOSE
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
 import akka.stream.SharedKillSwitch
+import com.google.inject.Key
+import com.google.inject.name.Names
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.{CanvasFrame, OpenCVFrameConverter}
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage
 import sentinel.app.Buncher
 import sentinel.camera.camera.stage.ShowImageStage
+import sentinel.plugin.util.ShowImage
+import sentinel.router.RouterFSM
 import sentinel.router.messages.Error
 import sentinel.router.messages.PluginStart
 import sentinel.router.messages.SourceInit
 import sentinel.router.messages.Start
 import sentinel.system.module.ModuleInjector
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
@@ -48,9 +50,20 @@ object CameraView extends App with LazyLogging {
   }
 
   val converter = new OpenCVFrameConverter.ToIplImage()
+  val canvas = createCanvas(shutdown)
+  val canvas2 = createCanvas(shutdown)
+  val canvas3 = createCanvas(shutdown)
 
-  createCanvas(shutdown)
   startStreaming(buncher)
+
+  val showImagePlugin = new ShowImage(canvas, converter)(materializer)
+  val showImagePlugin2 = new ShowImage(canvas2, converter)(materializer)
+  val showImagePlugin3 = new ShowImage(canvas3, converter)(materializer)
+
+  buncher.addPlugin(showImagePlugin)
+  buncher.addPlugin(showImagePlugin2)
+  buncher.addPlugin(showImagePlugin3)
+
   sys.addShutdownHook(shutdown)
 
   private def startStreaming(buncher: Buncher) = {
@@ -80,7 +93,7 @@ object CameraView extends App with LazyLogging {
     logger.info("Video streaming stopped.")
   }
 
-  private def createCanvas(shutdown: => Unit) = {
+  private def createCanvas(shutdown: => Unit): CanvasFrame = {
     val canvas = new CanvasFrame("Sentinel Camera View Util")
     canvas.setDefaultCloseOperation(EXIT_ON_CLOSE)
     canvas.addWindowListener(new WindowAdapter() {
@@ -89,8 +102,10 @@ object CameraView extends App with LazyLogging {
         shutdown
       }
     })
+    canvas
   }
 
+  @deprecated
   class ShowImageActor(canvas: CanvasFrame, converter: ToIplImage) extends Actor with ActorLogging with LazyLogging {
     override def receive: Receive = {
       case PluginStart(killSwitch, broadcast) =>

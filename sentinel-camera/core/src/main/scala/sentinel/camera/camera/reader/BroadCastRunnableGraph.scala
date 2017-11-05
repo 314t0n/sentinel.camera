@@ -13,6 +13,8 @@ import scala.concurrent.Future
 case class BroadCastRunnableGraph(graph: RunnableGraph[CameraSource])(
     implicit val materializer: ActorMaterializer) {
 
+  lazy val mat = graph.run()
+
   @throws[TimeoutException]
   def toFuture(): Future[Done] =
       graph.run().runWith(Sink.ignore)
