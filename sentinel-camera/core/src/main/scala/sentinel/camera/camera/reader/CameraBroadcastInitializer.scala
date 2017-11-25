@@ -7,12 +7,11 @@ import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 
 import scala.concurrent.Promise
 
-class CameraReaderFactory @Inject()(broadCastMateralizer: BroadcastMateralizer)(implicit val materalizer: ActorMaterializer)
-  extends LazyLogging {
+class CameraBroadcastInitializer @Inject()(
+    broadCastMateralizer: BroadcastMateralizer)
+    extends LazyLogging {
 
-  def create(gks: GlobalKillSwitch): Promise[BroadCastRunnableGraph] = {
-    // + send msg to plugin registry
+  def create(gks: GlobalKillSwitch): Promise[BroadCastRunnableGraph] =
     broadCastMateralizer.create(gks)
-  }
 
 }

@@ -34,7 +34,7 @@ class BroadcastMateralizer @Inject()(
   private implicit val executionContext =
     materializer.system.dispatchers.defaultGlobalDispatcher
 
-  def create(gks: GlobalKillSwitch) = {
+  def create(gks: GlobalKillSwitch): Promise[BroadCastRunnableGraph] = {
     println("create")
     val reader    = cameraReaderFactory.create(gks)
     val broadcast = broadcastFactory.create(reader)

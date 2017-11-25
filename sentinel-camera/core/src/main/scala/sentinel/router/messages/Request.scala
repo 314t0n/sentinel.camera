@@ -16,6 +16,7 @@ case object Started extends Request
 case class Start(gks: GlobalKillSwitch) extends Request
 
 case class PluginStart(ks: KillSwitch, broadcast: BroadCastRunnableGraph) extends Request
+case class AdvancedPluginStart(ks: GlobalKillSwitch, broadcast: BroadCastRunnableGraph) extends Request
 
 case class WaitingForRoutees(requestor: ActorRef, numberOfResponses: Int) extends Request
 
