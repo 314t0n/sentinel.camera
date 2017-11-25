@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacv.Frame
 import sentinel.camera.camera.graph.CameraReaderGraph
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 
 /**
   * Class for creating CameraSource instances
@@ -23,9 +24,10 @@ class CameraReaderGraphFactory @Inject()(cameraSource: Source[Frame, NotUsed],
     * @param killSwitch A SharedKillswitch to stop the source and as well as the whole stream
     * @return a new CameraSource instance
     */
-  def create(killSwitch: KillSwitch): CameraSource = {
+  def create(gks: GlobalKillSwitch): CameraSource = {
     logger.info("Creating CameraSource")
-    new CameraReaderGraph(cameraSource, tickingSource, killSwitch.asInstanceOf[SharedKillSwitch]).createGraph()
+    // TODO wrap killswitch into a domain object and drop asINstanceof
+    new CameraReaderGraph(cameraSource, tickingSource, gks.sharedKillSwitch).createGraph()
   }
 
 }

@@ -3,6 +3,7 @@ package sentinel.router.messages
 import akka.actor.ActorRef
 import akka.stream.KillSwitch
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 
 sealed trait Request
 
@@ -12,7 +13,7 @@ case object Stop extends Request
 
 case object Started extends Request
 
-case class Start(ks: KillSwitch) extends Request
+case class Start(gks: GlobalKillSwitch) extends Request
 
 case class PluginStart(ks: KillSwitch, broadcast: BroadCastRunnableGraph) extends Request
 

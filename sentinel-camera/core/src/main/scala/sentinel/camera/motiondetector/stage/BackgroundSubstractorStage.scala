@@ -7,9 +7,10 @@ import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
 import sentinel.camera.camera.CameraFrame
 
 class BackgroundSubstractorStage(backgroundSubstractor: BackgroundSubstractor)
-  extends GraphStage[FlowShape[CameraFrame, CameraFrame]] with LazyLogging {
+    extends GraphStage[FlowShape[CameraFrame, CameraFrame]]
+    with LazyLogging {
 
-  private val in = Inlet[CameraFrame]("MotionDetect.in")
+  private val in  = Inlet[CameraFrame]("MotionDetect.in")
   private val out = Outlet[CameraFrame]("MotionDetect.out")
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =

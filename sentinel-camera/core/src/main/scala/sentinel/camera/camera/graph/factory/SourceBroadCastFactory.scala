@@ -10,8 +10,9 @@ import sentinel.camera.camera.reader.BroadCastRunnableGraph
 class SourceBroadCastFactory @Inject()(
     implicit materializer: ActorMaterializer) {
 
-  def create(source: CameraSource): BroadCastRunnableGraph =
+  def create(source: CameraSource): BroadCastRunnableGraph = {
+   println("creation of the beast")
     BroadCastRunnableGraph(
       source.toMat(BroadcastHub.sink(bufferSize = 1))(Keep.right))
-
+  }
 }

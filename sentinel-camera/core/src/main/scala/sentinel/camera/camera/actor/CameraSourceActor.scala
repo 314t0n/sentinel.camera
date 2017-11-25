@@ -28,6 +28,7 @@ object CameraSourceActor {
   *
   * @param broadCastMateralizer factory to materalize broadcast stream from source
   */
+@deprecated
 class CameraSourceActor(broadCastMateralizer: BroadcastMateralizer)(implicit val materalizer: ActorMaterializer)
     extends Actor
     with ActorLogging
@@ -39,12 +40,12 @@ class CameraSourceActor(broadCastMateralizer: BroadcastMateralizer)(implicit val
   override def receive: Receive = {
     case Start(ks) =>
       val requestor = sender()
-      Try(broadCastMateralizer.create(ks).future.onComplete {
-        case Success(bs) => requestor ! SourceInit(bs)
-        case Failure(e)  => respondWithError(requestor, e)
-      }) recover {
-        case e: Exception => respondWithError(requestor, e)
-      }
+//      Try(broadCastMateralizer.create(ks).future.onComplete {
+//        case Success(bs) => requestor ! SourceInit(bs)
+//        case Failure(e)  => respondWithError(requestor, e)
+//      }) recover {
+//        case e: Exception => respondWithError(requestor, e)
+//      }
   }
 
   private def respondWithError(requestor: ActorRef, e: Throwable) = {

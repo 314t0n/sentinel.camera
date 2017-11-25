@@ -10,6 +10,7 @@ import sentinel.camera.camera.graph.CameraReaderGraph
 import sentinel.camera.camera.graph.factory.CameraReaderGraphFactory
 import sentinel.camera.camera.graph.factory.SourceBroadCastFactory
 import sentinel.camera.camera.reader.BroadcastMateralizer.StreamClosedError
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 import sentinel.camera.utils.settings.Settings
 
 import scala.concurrent.Await
@@ -33,8 +34,9 @@ class BroadcastMateralizer @Inject()(
   private implicit val executionContext =
     materializer.system.dispatchers.defaultGlobalDispatcher
 
-  def create(ks: KillSwitch) = {
-    val reader    = cameraReaderFactory.create(ks)
+  def create(gks: GlobalKillSwitch) = {
+    println("create")
+    val reader    = cameraReaderFactory.create(gks)
     val broadcast = broadcastFactory.create(reader)
     val promise   = Promise[BroadCastRunnableGraph]()
     materalize(broadcast, promise)
@@ -51,7 +53,8 @@ class BroadcastMateralizer @Inject()(
 
   private def awaitBroadcastStartUp(broadcast: BroadCastRunnableGraph,
                           promise: Promise[BroadCastRunnableGraph]) = {
-    val broadcastStream = broadcast.mat.runWith(Sink.ignore)
+    val broadcastStream = broadcast.mat
+      .runWith(Sink.ignore)
 
     broadcastStream.onComplete {
       case Success(Done) =>

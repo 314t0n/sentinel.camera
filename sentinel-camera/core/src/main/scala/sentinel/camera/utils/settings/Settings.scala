@@ -41,7 +41,7 @@ sealed trait Settings {
     */
   def motionDetectOptions(): Map[String, AnyRef]
 
-  def getDuration(path: String, unit: TimeUnit): FiniteDuration
+  def getDuration(path: String, unit: TimeUnit = TimeUnit.SECONDS): FiniteDuration
 
   def getInt(path: String): Int
 }

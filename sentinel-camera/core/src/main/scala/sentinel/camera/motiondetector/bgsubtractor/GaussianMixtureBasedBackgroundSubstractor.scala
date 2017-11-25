@@ -7,8 +7,8 @@ import sentinel.camera.camera.CameraFrame
 @deprecated
 object GaussianMixtureBasedBackgroundSubstractor {
   @deprecated
-  def apply(mog: BackgroundSubtractorMOG2, learningRate: Double): GaussianMixtureBasedBackgroundSubstractor
-  = new GaussianMixtureBasedBackgroundSubstractor(mog, learningRate)
+  def apply(mog: BackgroundSubtractorMOG2, learningRate: Double): GaussianMixtureBasedBackgroundSubstractor =
+    new GaussianMixtureBasedBackgroundSubstractor(mog, learningRate)
 }
 
 /**
@@ -17,8 +17,9 @@ object GaussianMixtureBasedBackgroundSubstractor {
   * @param backgroundSubtractorMOG2
   * @param learningRate
   */
-class GaussianMixtureBasedBackgroundSubstractor(backgroundSubtractorMOG2: BackgroundSubtractorMOG2, learningRate: Double)
-  extends BackgroundSubstractor
+class GaussianMixtureBasedBackgroundSubstractor(backgroundSubtractorMOG2: BackgroundSubtractorMOG2,
+                                                learningRate: Double)
+    extends BackgroundSubstractor
     with LazyLogging {
 
   //  private val backgroundSubtractorMOG2: BackgroundSubtractorMOG2 =

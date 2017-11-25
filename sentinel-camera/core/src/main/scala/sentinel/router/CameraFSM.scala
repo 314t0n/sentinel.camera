@@ -34,6 +34,7 @@ object CameraFSM {
   * @param ec           Execution context for handling actor ask
   * @param system       ActorSystem
   */
+@deprecated
 class CameraFSM(cameraSource: ActorRef, router: ActorRef, settings: Settings)(implicit val ec: ExecutionContext,
                                                                               val system: ActorSystem)
     extends FSM[State, Request] {
@@ -59,7 +60,7 @@ class CameraFSM(cameraSource: ActorRef, router: ActorRef, settings: Settings)(im
       goto(Idle) using Stop
 
     case Event(SourceInit(broadcast), WaitingForSource(sender, Start(ks))) =>
-      sendRequest(router, PluginStart(ks, broadcast))(routerTimeout)
+//      sendRequest(router, PluginStart(ks, broadcast))(routerTimeout)
       goto(Waiting) using WaitingForRouter(sender)
 
     case Event(Ready(Ok), WaitingForRouter(_)) =>

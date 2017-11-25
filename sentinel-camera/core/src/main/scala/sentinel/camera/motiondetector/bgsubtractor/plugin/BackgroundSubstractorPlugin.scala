@@ -1,23 +1,18 @@
-package sentinel.plugin.util
+package sentinel.camera.motiondetector.bgsubtractor.plugin
 
-import akka.stream.ActorMaterializer
-import akka.stream.KillSwitch
-import akka.stream.KillSwitches
-import akka.stream.SharedKillSwitch
-import com.google.inject.Inject
+import akka.stream.{ActorMaterializer, KillSwitches, SharedKillSwitch}
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacv.CanvasFrame
-import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage
 import sentinel.camera.camera.stage.ShowImageStage
+import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
+import sentinel.camera.motiondetector.stage.BackgroundSubstractorStage
 import sentinel.plugin.Plugin
 import sentinel.router.messages.PluginStart
 
 import scala.util.Try
 
-class ShowImage(canvas: CanvasFrame, converter: ToIplImage)(implicit mat: ActorMaterializer)
-    extends Plugin
+class BackgroundSubstractorPlugin(backgroundSubstractor: BackgroundSubstractor) (implicit mat: ActorMaterializer)
+  extends Plugin
     with LazyLogging {
-
   var pluginKillSwitch: Option[SharedKillSwitch] = None
 
   override def start(ps: PluginStart): Unit =
@@ -36,7 +31,7 @@ class ShowImage(canvas: CanvasFrame, converter: ToIplImage)(implicit mat: ActorM
       publisher
         .via(killSwitch.asInstanceOf[SharedKillSwitch].flow)
         .via(pluginKillSwitch.get.flow)
-        .runWith(new ShowImageStage(canvas, converter))
+        .via(new BackgroundSubstractorStage(backgroundSubstractor))
 
     }) recover {
       case e: Exception => logger.error(e.getMessage, e)

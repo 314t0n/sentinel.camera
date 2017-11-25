@@ -10,12 +10,10 @@ import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 
 import scala.concurrent.Future
 
-case class BroadCastRunnableGraph(graph: RunnableGraph[CameraSource])(
-    implicit val materializer: ActorMaterializer) {
+case class BroadCastRunnableGraph(graph: RunnableGraph[CameraSource])(implicit val materializer: ActorMaterializer) {
 
   lazy val mat = graph.run()
 
   @throws[TimeoutException]
-  def toFuture(): Future[Done] =
-      graph.run().runWith(Sink.ignore)
+  def toFuture(): Future[Done] = mat.runWith(Sink.ignore)
 }

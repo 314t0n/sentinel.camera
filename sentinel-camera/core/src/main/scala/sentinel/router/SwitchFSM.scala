@@ -1,23 +1,30 @@
 package sentinel.router
 
-import java.util.concurrent.TimeUnit
-
-import akka.actor.{ActorRef, FSM, Props}
-import akka.pattern.ask
+import akka.actor.ActorRef
+import akka.actor.FSM
+import akka.actor.PoisonPill
+import akka.actor.Props
 import akka.util.Timeout
+import sentinel.camera.camera.actor.CameraSourceActor
+import sentinel.camera.camera.actor.CameraSourceActorFactory
 import sentinel.camera.utils.settings.Settings
 import sentinel.router.messages.Messages._
 import sentinel.router.messages._
+import akka.pattern.ask
+import sentinel.camera.camera.reader.CameraReaderFactory
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object SwitchFSM {
 
   val Name = classOf[SwitchFSM].getName
 
-  def props(camera: ActorRef, settings: Settings)(implicit ec: ExecutionContext) =
-    Props(new SwitchFSM(camera, settings))
+  def props(cameraSourceFactory: CameraReaderFactory, settings: Settings)(implicit ec: ExecutionContext) =
+    Props(new SwitchFSM(cameraSourceFactory, settings))
 
 }
 
@@ -25,20 +32,18 @@ object SwitchFSM {
   * Handling Active/Idle stages
   * shutdown killSwitch on Stop
   * delegate state changes to a router
-  *
-  * @param camera
   */
-class SwitchFSM(camera: ActorRef, settings: Settings)(implicit val ec: ExecutionContext) extends FSM[State, Request] {
+class SwitchFSM(cameraReaderFactory: CameraReaderFactory, settings: Settings)(implicit val ec: ExecutionContext)
+    extends FSM[State, Request] {
 
-  private val duration =
-    settings.getDuration("system.options.startUpTimeout", TimeUnit.SECONDS)
+  private val duration         = settings.getDuration("system.options.startUpTimeout")
   private implicit val timeout = Timeout(duration)
 
   startWith(Idle, Stop)
 
   when(Waiting) {
     case Event(GoToActive, _) =>
-      log.debug("Active")
+      context.child(CameraSourceActor.Name).map(context.stop(_))
       goto(Active)
     case Event(Error, _) =>
       goto(Idle)
@@ -49,24 +54,31 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(implicit val ec: Execution
   when(Idle) {
     case Event(Start(ks), _) =>
       log.debug("Start request")
-      askRouter(Start(ks), GoToActive, sender)
+      cameraReaderFactory.create(ks)
+
+      Try(cameraReaderFactory.create(ks).future.onComplete {
+        case Success(_) => self ! GoToActive
+        case Failure(e)  => self ! Error(e.getMessage)
+      }) recover {
+        case e: Exception => self ! Error(e.getMessage)
+      }
       goto(Waiting) using (Start(ks))
   }
 
   when(Active) {
     case Event(Stop, _) =>
-      askRouter(Stop, GoToIdle, sender)
-      goto(Waiting)
+      goto(Idle)
   }
 
-  private def askRouter(request: Request, nextState: Request, requestor: ActorRef) = {
+  private def askCameraToStart(actorRef: ActorRef, request: Request, requestor: ActorRef) = {
     log.debug("{} request sent to camera, timeout: {}", request, timeout)
-    ask(camera, request)
+    ask(actorRef, request)
       .mapTo[Response]
-      .onComplete {
+      .onComplete({
         case Success(Ready(msg)) =>
-          log.debug("Camera responded with Success")
-          self ! nextState
+          log.debug("Camera responded successfully with: {}", msg)
+          actorRef ! PoisonPill
+          self ! GoToActive
           requestor ! Ready(msg)
         case Success(Error(reason)) =>
           log.error("Camera responded with error message {}", reason)
@@ -80,7 +92,7 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(implicit val ec: Execution
           log.error("Error occurred while waiting for response: {}", e)
           self ! GoToIdle
           requestor ! Error(e.getMessage)
-      }
+      })
   }
 
   onTransition {
@@ -88,6 +100,14 @@ class SwitchFSM(camera: ActorRef, settings: Settings)(implicit val ec: Execution
       stateData match {
         case Start(ks) =>
           ks.shutdown()
+        case _ =>
+          log.warning("received unhandled request {} in state Active", stateName)
+      }
+    case Active -> Idle =>
+      stateData match {
+        case Start(ks) =>
+          ks.shutdown()
+          sender() ! Ready(Finished)
         case _ =>
           log.warning("received unhandled request {} in state Active", stateName)
       }

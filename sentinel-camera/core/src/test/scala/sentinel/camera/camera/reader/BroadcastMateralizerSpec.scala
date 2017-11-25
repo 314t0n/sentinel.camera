@@ -20,8 +20,8 @@ import testutils.TestSystem.TestActorSystem
 
 import scala.concurrent.Future
 import scala.concurrent.TimeoutException
-
 import BroadcastMateralizerSpec._
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 
 object BroadcastMateralizerSpec{
   private val exception = new RuntimeException("message")
@@ -37,7 +37,7 @@ class BroadcastMateralizerSpec
     with MockitoSugar {
 
   private implicit val materializer     = ActorMaterializer()
-  private val killSwitch                = mock[KillSwitch]
+  private val killSwitch                = mock[GlobalKillSwitch]
   private val sourceDummy: CameraSource = null
   private val broadcastDummy: BroadCastRunnableGraph =
     mock[BroadCastRunnableGraph]
