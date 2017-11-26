@@ -16,7 +16,7 @@ import org.scalatest.OneInstancePerTest
 import org.scalatest.WordSpecLike
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
-import sentinel.camera.camera.reader.BroadcastMateralizer
+import sentinel.camera.camera.reader.BroadcastMaterializer
 import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
@@ -35,7 +35,7 @@ class CameraSourceActorSpec
   private val killSwitch                         = mock[KillSwitch]
   private val graph: RunnableGraph[CameraSource] = null
   private val broadcastDummy                     = BroadCastRunnableGraph(graph)
-  private val broadCastMateralizer               = mock[BroadcastMateralizer]
+  private val broadCastMateralizer               = mock[BroadcastMaterializer]
   private val underTest =
     TestActorRef(Props(new CameraSourceActor(broadCastMateralizer)(materializer)))
 

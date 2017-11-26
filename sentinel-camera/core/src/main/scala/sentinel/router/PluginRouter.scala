@@ -1,9 +1,9 @@
 package sentinel.router
 
-import akka.stream.KillSwitch
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 import sentinel.plugin.Plugin
-import sentinel.router.messages.PluginStart
+import sentinel.router.messages.AdvancedPluginStart
 
 object PluginRouter {
   def empty(): PluginRouter = PluginRouter(Seq.empty, None, None)
@@ -16,7 +16,7 @@ object PluginRouter {
   * @param ks
   * @param bs
   */
-case class PluginRouter(plugins: Seq[Plugin], ks: Option[KillSwitch], bs: Option[BroadCastRunnableGraph]) {
+case class PluginRouter(plugins: Seq[Plugin], ks: Option[GlobalKillSwitch], bs: Option[BroadCastRunnableGraph]) {
 
   def addPlugin(plugin: Plugin): PluginRouter =
     if (plugins.contains(plugin)) this
@@ -24,7 +24,7 @@ case class PluginRouter(plugins: Seq[Plugin], ks: Option[KillSwitch], bs: Option
 
   def removePlugin(plugin: Plugin): PluginRouter = PluginRouter(plugins diff Seq(plugin), ks, bs)
 
-  def start(ps: PluginStart): PluginRouter = {
+  def start(ps: AdvancedPluginStart): PluginRouter = {
     plugins.foreach(_.start(ps))
     PluginRouter(plugins, Some(ps.ks), Some(ps.broadcast))
   }

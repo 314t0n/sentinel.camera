@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext
 
 object PluginFSM {
 
-  val Name = classOf[PluginFSM].getName
+  final val Name = classOf[PluginFSM].getName
 
   def props(router: ActorRef, settings: Settings)(
       implicit ec: ExecutionContext,

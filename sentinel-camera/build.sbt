@@ -8,7 +8,7 @@ lazy val commonDependencies = Seq(
   "com.typesafe.akka"          %% "akka-contrib"        % akkaVersion,
   "com.typesafe.akka"          %% "akka-testkit"        % akkaVersion,
   "org.scalactic"              %% "scalactic"           % "3.0.1",
-  "org.scalatest"              %% "scalatest"           % "3.0.1" % Test,
+  "org.scalatest"              %% "scalatest"           % "3.0.1",
   "org.mockito"                % "mockito-all"          % "1.10.19",
   "com.typesafe"               % "config"               % "1.3.1",
   "ch.qos.logback"             % "logback-classic"      % "1.1.7",

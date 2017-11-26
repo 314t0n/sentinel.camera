@@ -34,9 +34,9 @@ class RouterFSM(settings: Settings) extends FSM[State, PluginRouter] {
       log.debug("Remove plugin: {}", plugin)
       stay using router.removePlugin(plugin)
 
-    case Event(PluginStart(killSwitch, broadcast), router) =>
+    case Event(AdvancedPluginStart(killSwitch, broadcast), router) =>
       Try({
-        val started = router.start(PluginStart(killSwitch, broadcast))
+        val started = router.start(AdvancedPluginStart(killSwitch, broadcast))
         sender() ! Ready(Ok)
         goto(Active) using started
       }) recover {
@@ -73,7 +73,7 @@ class RouterFSM(settings: Settings) extends FSM[State, PluginRouter] {
       stay using router.removePlugin(plugin)
   }
 
-  private def createPluginStart(router: PluginRouter) = PluginStart(router.ks.get, router.bs.get)
+  private def createPluginStart(router: PluginRouter) = AdvancedPluginStart(router.ks.get, router.bs.get)
 
   whenUnhandled {
     case Event(e, s) =>

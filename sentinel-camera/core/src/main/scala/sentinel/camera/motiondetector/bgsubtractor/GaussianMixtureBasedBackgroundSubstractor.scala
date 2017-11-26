@@ -34,7 +34,8 @@ class GaussianMixtureBasedBackgroundSubstractor(backgroundSubtractorMOG2: Backgr
   //  }
 
   private def applyMask(source: IplImage): IplImage = {
-    val currentFrame = new Mat(source)
+    val nnn = org.bytedeco.javacpp.opencv_core.cvCloneImage(source)
+    val currentFrame = new Mat(nnn)
     backgroundSubtractorMOG2.apply(currentFrame, mask, learningRate)
     val maskedImage = new IplImage(mask)
     currentFrame.release()

@@ -2,11 +2,12 @@ package sentinel.router
 
 import akka.stream.KillSwitch
 import org.mockito.Mockito._
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 import sentinel.plugin.Plugin
-import sentinel.router.messages.PluginStart
+import sentinel.router.messages.{AdvancedPluginStart, PluginStart}
 
 class PluginRouterSpec extends WordSpec with Matchers with MockitoSugar {
 
@@ -64,9 +65,9 @@ class PluginRouterSpec extends WordSpec with Matchers with MockitoSugar {
         val underTest = PluginRouter.empty
         val pluginA   = mock[Plugin]
         val pluginB   = mock[Plugin]
-        val ks        = mock[KillSwitch]
+        val ks        = mock[GlobalKillSwitch]
         val bs        = mock[BroadCastRunnableGraph]
-        val ps        = PluginStart(ks, bs)
+        val ps        = AdvancedPluginStart(ks, bs)
 
         val result = underTest.addPlugin(pluginA).addPlugin(pluginB).start(ps)
 

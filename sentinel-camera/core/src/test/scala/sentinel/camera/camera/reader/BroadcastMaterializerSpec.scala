@@ -13,21 +13,21 @@ import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 import sentinel.camera.camera.graph.factory.CameraReaderGraphFactory
 import sentinel.camera.camera.graph.factory.SourceBroadCastFactory
-import sentinel.camera.camera.reader.BroadcastMateralizer.StreamClosedError
+import sentinel.camera.camera.reader.BroadcastMaterializer.StreamClosedError
 import sentinel.camera.utils.settings.Settings
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
 import scala.concurrent.Future
 import scala.concurrent.TimeoutException
-import BroadcastMateralizerSpec._
+import BroadcastMaterializerSpec._
 import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 
-object BroadcastMateralizerSpec{
+object BroadcastMaterializerSpec{
   private val exception = new RuntimeException("message")
 }
 
-class BroadcastMateralizerSpec
+class BroadcastMaterializerSpec
     extends TestKit(ActorSystem(TestActorSystem))
     with ImplicitSender
     with AsyncWordSpecLike
@@ -45,7 +45,7 @@ class BroadcastMateralizerSpec
   private val cameraReaderFactory = mock[CameraReaderGraphFactory]
   private val settings            = mock[Settings]
   private val underTest =
-    new BroadcastMateralizer(cameraReaderFactory, broadcastFactory, settings)(
+    new BroadcastMaterializer(cameraReaderFactory, broadcastFactory, settings)(
       materializer)
 
   "BroadcastMateralizer" when {

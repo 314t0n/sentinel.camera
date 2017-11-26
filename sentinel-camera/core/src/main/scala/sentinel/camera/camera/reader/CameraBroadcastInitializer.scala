@@ -8,7 +8,7 @@ import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 import scala.concurrent.Promise
 
 class CameraBroadcastInitializer @Inject()(
-    broadCastMateralizer: BroadcastMateralizer)
+    broadCastMateralizer: BroadcastMaterializer)
     extends LazyLogging {
 
   def create(gks: GlobalKillSwitch): Promise[BroadCastRunnableGraph] =

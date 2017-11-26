@@ -3,9 +3,7 @@ package sentinel.camera.camera.stage
 import akka.stream._
 import akka.stream.stage._
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacv.Frame
-import org.bytedeco.javacv.FrameGrabber
-import sentinel.router.messages.Messages.Error
+import org.bytedeco.javacv.{Frame, FrameGrabber}
 
 import scala.util.Try
 
@@ -19,18 +17,19 @@ class CameraReaderStage(grabber: FrameGrabber)
     new GraphStageLogic(shape) {
 
       setHandler(out, new OutHandler {
-        override def onPull(): Unit =
+        override def onPull(): Unit = {
           grabFrame().get.foreach(frame => push(out, frame))
+        }
       })
 
       override def postStop(): Unit = {
         grabber.close()
-        logger.debug("Camera stopped")
+        logger.info("Camera stopped")
       }
 
       override def preStart(): Unit = {
         grabber.start()
-        logger.debug("Camera started")
+        logger.info("Camera started")
       }
 
       private def grabFrame(): Try[Option[Frame]] = {

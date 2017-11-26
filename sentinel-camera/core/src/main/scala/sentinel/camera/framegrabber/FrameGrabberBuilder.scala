@@ -15,6 +15,8 @@ class FFmpegFrameGrabberBuilder @Inject()(settings: Settings) extends FrameGrabb
   override def create(): FrameGrabber = synchronized {
     val grabber = new FFmpegFrameGrabber(settings.cameraPath)
     grabber.setFormat(settings.cameraFormat)
+    grabber.setFrameRate(settings.getInt("camera.fps"))
+    grabber.setNumBuffers(30)
     settings.cameraOptions.foreach { case (k, v) => grabber.setOption(k, v.toString) }
     grabber.setPixelFormat(AV_PIX_FMT_BGR24)
     grabber

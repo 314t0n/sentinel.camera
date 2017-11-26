@@ -1,8 +1,6 @@
 package sentinel.camera
 
 import com.typesafe.scalalogging.LazyLogging
-import sentinel.camera.utils.webcam.WebcamWindow
-import sentinel.system.module.ModuleInjector
 
 object SentinelApp extends App with LazyLogging {
 

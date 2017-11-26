@@ -6,7 +6,7 @@ import sentinel.camera.camera.stage.ShowImageStage
 import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
 import sentinel.camera.motiondetector.stage.BackgroundSubstractorStage
 import sentinel.plugin.Plugin
-import sentinel.router.messages.PluginStart
+import sentinel.router.messages.{AdvancedPluginStart, PluginStart}
 
 import scala.util.Try
 
@@ -15,21 +15,21 @@ class BackgroundSubstractorPlugin(backgroundSubstractor: BackgroundSubstractor) 
     with LazyLogging {
   var pluginKillSwitch: Option[SharedKillSwitch] = None
 
-  override def start(ps: PluginStart): Unit =
+  override def start(ps: AdvancedPluginStart): Unit =
     Try({
 
       pluginKillSwitch = Some(KillSwitches.shared("ShowImage"))
 
       logger.info("Starting image view")
 
-      val (broadcast, killSwitch) = (ps.broadcast, ps.ks)
+      val (broadcast, killSwitch) = (ps.broadcast, ps.ks.sharedKillSwitch)
 
       logger.info(broadcast.toString)
 
       val publisher               = broadcast.mat
 
       publisher
-        .via(killSwitch.asInstanceOf[SharedKillSwitch].flow)
+        .via(killSwitch.flow)
         .via(pluginKillSwitch.get.flow)
         .via(new BackgroundSubstractorStage(backgroundSubstractor))
 

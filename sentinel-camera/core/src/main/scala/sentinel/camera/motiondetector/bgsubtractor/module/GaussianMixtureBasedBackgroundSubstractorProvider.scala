@@ -9,7 +9,7 @@ class GaussianMixtureBasedBackgroundSubstractorProvider @Inject()(backgroundSubt
                                                                   settings: Settings)
   extends Provider[GaussianMixtureBasedBackgroundSubstractor] {
 
-  private val learningRate = settings.motionDetectOptions().getOrElse("learningRate", "0.1").asInstanceOf[Double]
+  private val learningRate = settings.motionDetectOptions().getOrElse("learningRate", 0.1).asInstanceOf[Double]
 
   override def get(): GaussianMixtureBasedBackgroundSubstractor =
     GaussianMixtureBasedBackgroundSubstractor(backgroundSubtractorMOG2, learningRate)

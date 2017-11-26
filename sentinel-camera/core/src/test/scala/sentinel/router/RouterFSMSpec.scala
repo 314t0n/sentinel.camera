@@ -22,6 +22,7 @@ import org.scalatest.WordSpecLike
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import sentinel.camera.camera.reader.BroadCastRunnableGraph
+import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 import sentinel.camera.utils.settings.Settings
 import sentinel.plugin.Plugin
 import sentinel.router.RouterFSM.Add
@@ -50,7 +51,7 @@ class RouterFSMSpec
   private val routees        = Vector(routeeA, routeeB)
   private val severalRoutees = SeveralRoutees(routees.map(_.ref).map(ActorRefRoutee))
 
-  private val killSwitch = mock[KillSwitch]
+  private val killSwitch = mock[GlobalKillSwitch]
   private val broadcast  = mock[BroadCastRunnableGraph]
   private val settings   = mock[Settings]
   when(settings.getDuration(any[String], any[TimeUnit]))
@@ -82,21 +83,21 @@ class RouterFSMSpec
 
       "add plugin when Active should start the plugin" in {
         val plugin = mock[Plugin]
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
 
         underTest ! Add(plugin)
 
         underTest.stateData shouldEqual PluginRouter(Seq(plugin), Some(killSwitch), Some(broadcast))
-        verify(plugin).start(any[PluginStart])
+        verify(plugin).start(any[AdvancedPluginStart])
       }
 
       "add plugin throws exception when Active should respond with error message" in {
         val plugin = mock[Plugin]
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
         val message = "exception"
-        when(plugin.start(any[PluginStart])).thenThrow(new RuntimeException(message))
+        when(plugin.start(any[AdvancedPluginStart])).thenThrow(new RuntimeException(message))
 
         underTest ! Add(plugin)
 
@@ -133,7 +134,7 @@ class RouterFSMSpec
 
       "remove plugin when Active should stop the plugin" in {
         val plugin = mock[Plugin]
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
 
         underTest ! Add(plugin)
@@ -145,7 +146,7 @@ class RouterFSMSpec
 
       "remove plugin throws exception when Active should respond with error message" in {
         val plugin = mock[Plugin]
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
         val message = "exception"
         when(plugin.stop()).thenThrow(new RuntimeException(message))
@@ -167,21 +168,21 @@ class RouterFSMSpec
         val plugin = mock[Plugin]
 
         underTest ! Add(plugin)
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
 
         expectMsg(Ready(Ok))
         underTest.stateName shouldBe Active
         verifyZeroInteractions(killSwitch, broadcast)
-        verify(plugin).start(PluginStart(killSwitch, broadcast))
+        verify(plugin).start(AdvancedPluginStart(killSwitch, broadcast))
       }
 
       "switch from Idle to Active when plugin throw exception" in {
         val plugin = mock[Plugin]
         val message = "exception"
-        when(plugin.start(any[PluginStart])).thenThrow(new RuntimeException(message))
+        when(plugin.start(any[AdvancedPluginStart])).thenThrow(new RuntimeException(message))
 
         underTest ! Add(plugin)
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
 
         expectMsg(Error(message))
         underTest.stateName shouldBe Idle
@@ -193,14 +194,14 @@ class RouterFSMSpec
         val plugin = mock[Plugin]
 
         underTest ! Add(plugin)
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
         underTest ! Stop
 
         expectMsg(Ready(Finished))
         underTest.stateName shouldBe Idle
         verifyZeroInteractions(killSwitch, broadcast)
-        verify(plugin).start(PluginStart(killSwitch, broadcast))
+        verify(plugin).start(AdvancedPluginStart(killSwitch, broadcast))
         verify(plugin).stop
       }
 
@@ -210,14 +211,14 @@ class RouterFSMSpec
         when(plugin.stop()).thenThrow(new RuntimeException(message))
 
         underTest ! Add(plugin)
-        underTest ! PluginStart(killSwitch, broadcast)
+        underTest ! AdvancedPluginStart(killSwitch, broadcast)
         expectMsg(Ready(Ok))
         underTest ! Stop
 
         expectMsg(Error(message))
         underTest.stateName shouldBe Idle
         verifyZeroInteractions(killSwitch, broadcast)
-        verify(plugin).start(PluginStart(killSwitch, broadcast))
+        verify(plugin).start(AdvancedPluginStart(killSwitch, broadcast))
       }
     }
   }

@@ -1,10 +1,10 @@
 package sentinel.plugin
 
-import sentinel.router.messages.PluginStart
+import sentinel.router.messages.AdvancedPluginStart
 
 trait Plugin {
 
-  def start(p: PluginStart)
+  def start(p: AdvancedPluginStart)
 
   def stop()
 }

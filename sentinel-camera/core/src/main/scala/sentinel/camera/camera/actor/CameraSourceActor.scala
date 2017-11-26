@@ -6,7 +6,7 @@ import akka.actor.ActorRef
 import akka.actor.Props
 import akka.stream._
 import com.typesafe.scalalogging.LazyLogging
-import sentinel.camera.camera.reader.BroadcastMateralizer
+import sentinel.camera.camera.reader.BroadcastMaterializer
 import sentinel.router.messages.Error
 import sentinel.router.messages.SourceInit
 import sentinel.router.messages.Start
@@ -18,7 +18,7 @@ import scala.util.Try
 object CameraSourceActor {
   val Name = classOf[CameraSourceActor].getName
 
-  def props(broadCastMateralizer: BroadcastMateralizer, materalizer: ActorMaterializer) = {
+  def props(broadCastMateralizer: BroadcastMaterializer, materalizer: ActorMaterializer) = {
     Props(new CameraSourceActor(broadCastMateralizer)(materalizer))
   }
 }
@@ -29,7 +29,7 @@ object CameraSourceActor {
   * @param broadCastMateralizer factory to materalize broadcast stream from source
   */
 @deprecated
-class CameraSourceActor(broadCastMateralizer: BroadcastMateralizer)(implicit val materalizer: ActorMaterializer)
+class CameraSourceActor(broadCastMateralizer: BroadcastMaterializer)(implicit val materalizer: ActorMaterializer)
     extends Actor
     with ActorLogging
     with LazyLogging {

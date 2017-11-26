@@ -2,22 +2,12 @@ package sentinel.router
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorContext
 import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.stream.KillSwitch
-import akka.testkit.ImplicitSender
-import akka.testkit.TestFSMRef
-import akka.testkit.TestKit
-import akka.testkit.TestProbe
+import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
 import org.mockito.Matchers.any
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfter, Matchers, OneInstancePerTest, WordSpecLike}
-import sentinel.camera.camera.actor.CameraSourceActorFactory
-import sentinel.camera.camera.reader.{BroadCastRunnableGraph, CameraReaderFactory}
+import org.scalatest.{Matchers, OneInstancePerTest, WordSpecLike}
 import sentinel.camera.camera.reader.KillSwitches.GlobalKillSwitch
 import sentinel.camera.utils.settings.Settings
 import sentinel.router.messages.Messages._
@@ -25,7 +15,6 @@ import sentinel.router.messages._
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
-import scala.concurrent.Promise
 import scala.concurrent.duration._
 
 class SwitchFSMSpec
@@ -39,14 +28,12 @@ class SwitchFSMSpec
 
   private implicit val ec         = system.dispatcher
   private val settings            = mock[Settings]
-  private val cameraSourceFactory = mock[CameraReaderFactory]
+  private val systemInitializer = TestProbe()
   when(settings.getDuration(any[String], any[TimeUnit]))
     .thenReturn(50 milliseconds)
-  private val underTest  = TestFSMRef(new SwitchFSM(cameraSourceFactory, settings))
+  private val underTest  = TestFSMRef(new SwitchFSM(systemInitializer.ref, settings))
   private val killSwitch = mock[GlobalKillSwitch]
   private val child      = TestProbe()
-
-  when(cameraSourceFactory.create(killSwitch)).thenReturn(Promise.successful(mock[BroadCastRunnableGraph]))
 
   "Switch" when {
 

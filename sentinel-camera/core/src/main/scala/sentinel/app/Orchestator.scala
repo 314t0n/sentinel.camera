@@ -15,7 +15,7 @@ import sentinel.router.messages.{Start, Stop}
 import scala.concurrent.ExecutionContext
 
 class Orchestator @Inject()(@Named("SwitchFSM") switch: ActorRef,
-                            @Named("PluginRegistryFSM") pluginRegistry: ActorRef,
+                            @Named("RouterFSM") pluginRegistry: ActorRef,
                             settings: Settings)(@Named("MessageExecutionContext") implicit val ec: ExecutionContext)
     extends LazyLogging {
 
