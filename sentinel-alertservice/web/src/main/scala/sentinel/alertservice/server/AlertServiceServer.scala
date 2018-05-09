@@ -1,0 +1,19 @@
+package sentinel.server
+
+import com.twitter.finatra.http.HttpServer
+import com.twitter.finatra.http.routing.HttpRouter
+import sentinel.admin.AdminController
+import sentinel.alertservice.controller.AlertController
+import sentinel.alertservice.serialization.AlertMessageBodyReader
+import sentinel.app.communication.AlertMessage
+
+class AlertServiceServer() extends HttpServer {
+
+  override val defaultFinatraHttpPort: String = ":8080"
+
+  override protected def configureHttp(router: HttpRouter): Unit =
+    router
+      .register[AlertMessageBodyReader, AlertMessage]
+      .add[AdminController]
+      .add[AlertController]
+}
