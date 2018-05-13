@@ -1,5 +1,8 @@
 lazy val akkaVersion = "2.5.4"
 
+lazy val finatraVersion = "18.4.0"
+lazy val guiceVersion   = "4.1.0"
+
 lazy val commonDependencies = Seq(
   "com.typesafe.akka"          %% "akka-actor"          % akkaVersion,
   "com.typesafe.akka"          %% "akka-testkit"        % akkaVersion,
@@ -13,9 +16,29 @@ lazy val commonDependencies = Seq(
   "com.typesafe"               % "config"               % "1.3.1",
   "ch.qos.logback"             % "logback-classic"      % "1.1.7",
   "com.typesafe.scala-logging" %% "scala-logging"       % "3.5.0",
-  "com.google.inject"          % "guice"                % "4.1.0",
-  "com.twitter"                %% "finagle-http"        % "18.4.0",
-  "com.twitter"                %% "finatra-http"        % "18.4.0"
+  "com.google.inject"          % "guice"                % guiceVersion,
+  "com.google.inject"          % "guice"                % guiceVersion % Test,
+  "com.twitter"                %% "finagle-http"        % finatraVersion,
+  "com.twitter"                %% "finatra-http"        % finatraVersion,
+  "com.twitter"                %% "inject-server"       % finatraVersion,
+  "com.twitter"                %% "inject-app"          % finatraVersion,
+  "com.twitter"                %% "inject-core"         % finatraVersion,
+  "com.twitter"                %% "inject-modules"      % finatraVersion
+)
+
+lazy val acTestDependencies = Seq(
+  "com.twitter"                  %% "finagle-http"   % finatraVersion % Test,
+  "com.twitter"                  %% "finatra-http"   % finatraVersion % Test,
+  "com.twitter"                  %% "inject-server"  % finatraVersion % Test,
+  "com.twitter"                  %% "inject-app"     % finatraVersion % Test,
+  "com.twitter"                  %% "inject-core"    % finatraVersion % Test,
+  "com.twitter"                  %% "inject-modules" % finatraVersion % Test,
+  "com.google.inject.extensions" % "guice-testlib"   % guiceVersion   % Test,
+  "com.twitter"                  %% "finatra-http"   % finatraVersion % Test classifier "tests",
+  "com.twitter"                  %% "inject-server"  % finatraVersion % Test classifier "tests",
+  "com.twitter"                  %% "inject-app"     % finatraVersion % Test classifier "tests",
+  "com.twitter"                  %% "inject-core"    % finatraVersion % Test classifier "tests",
+  "com.twitter"                  %% "inject-modules" % finatraVersion % Test classifier "tests"
 )
 
 lazy val commonSettings = Seq(
@@ -41,7 +64,7 @@ lazy val client = (project in file("client"))
 
 lazy val `acceptance-tests` = (project in file("acceptance-tests"))
   .settings(commonSettings ++ Seq(name := "sentinel-alertservice-acceptance-tests"))
-  .settings(libraryDependencies ++= commonDependencies)
+  .settings(libraryDependencies ++= commonDependencies ++ acTestDependencies)
   .dependsOn(web, client)
 
 lazy val `sentinel-protobuf` = (project in file("sentinel-protobuf"))

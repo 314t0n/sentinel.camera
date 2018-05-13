@@ -1,5 +1,4 @@
 package sentinel.alertservice.client
-
 import com.google.protobuf.ByteString
 import com.twitter.finagle.Http
 import com.twitter.finagle.Service
@@ -12,7 +11,7 @@ import sentinel.app.communication.AlertMessage
 object TestM extends App {
   val client = new Client
   try {
-    val resp = client.send(new AlertMessage(image = ByteString.copyFromUtf8("test"), timestamp = 1L))
+    val resp = client.send(new AlertMessage(image = ByteString.copyFromUtf8("test"), timestamp = 1L, cameraId = "test"))
     println(Await.result(resp))
   } finally {
     client.close()
