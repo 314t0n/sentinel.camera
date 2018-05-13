@@ -1,15 +1,14 @@
 package sentinel.alertservice.admin
-
 import com.twitter.finagle.http.Status._
-import com.twitter.finatra.http.EmbeddedHttpServer
-import com.twitter.inject.server.FeatureTest
-import sentinel.server.AlertServiceServer
+import sentinel.alertservice.AcceptanceSpec
 
-class HealthCheckSpec extends FeatureTest {
+class HealthCheckSpec extends AcceptanceSpec {
 
-  override val server = new EmbeddedHttpServer(new AlertServiceServer)
-
-  test("ping works") {
+  test("Server#ping works") {
     server.httpGet(path = "/ping", andExpect = Ok, withBody = "pong")
+  }
+
+  test("Server#startup") {
+    server.assertHealthy()
   }
 }
