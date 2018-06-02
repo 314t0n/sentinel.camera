@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit.{MILLISECONDS, SECONDS}
 import akka.actor.Cancellable
 import akka.stream.scaladsl.Source
 import com.google.inject.{Inject, Provider}
+import com.typesafe.scalalogging.LazyLogging
 import sentinel.TickSource
 import sentinel.camera.camera.module.TickSourceProvider.oneSecInMillis
 import sentinel.camera.utils.settings.Settings
@@ -16,14 +17,17 @@ object TickSourceProvider {
 }
 @deprecated
 class TickSourceProvider @Inject()(settings: Settings)
-    extends Provider[TickSource] {
+    extends Provider[TickSource] with LazyLogging {
 
   override def get(): TickSource = {
     println("What is up dear brother of mine?")
     val initialDelay = settings.getDuration("camera.initialDelay", SECONDS)
     val cameraFPS    = settings.getInt("camera.fps")
+
     val tickInterval =
       FiniteDuration(oneSecInMillis / cameraFPS, MILLISECONDS)
+
+    logger.info(s"Tick interval: $tickInterval")
 
     Source.tick(initialDelay, tickInterval, 0)
   }

@@ -1,5 +1,41 @@
 package sentinel.communication
 
-class Notifier {
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorSystem
+import akka.actor.Props
+import sentinel.camera.camera.CameraFrame
+import sentinel.camera.utils.settings.Settings
 
+object Notifier {
+
+  def props(settings: Settings, communication: Communication)(implicit actorSystem: ActorSystem): Props = {
+    Props(new Notifier(communication))
+  }
+
+}
+
+class Notifier(communication: Communication) extends Actor with ActorLogging {
+
+  private val pool = java.util.concurrent.Executors.newFixedThreadPool(2)
+
+  override def receive: Receive = {
+    case f: CameraFrame =>
+      pool.execute(
+        () =>
+          communication.send(f) match {
+            case Left(msg)  => log.warning(msg)
+            case Right(msg) => log.info(msg)
+        }
+      )
+//    case frames: Seq[CameraFrame] =>
+//      pool.execute(
+//        () =>
+//          communication.sendBatch(frames) match {
+//            case Left(msg)  => log.warning(msg)
+//            case Right(msg) => log.info(msg)
+//          }
+//      )
+
+  }
 }

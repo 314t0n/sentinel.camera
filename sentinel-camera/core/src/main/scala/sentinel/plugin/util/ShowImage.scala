@@ -1,23 +1,32 @@
 package sentinel.plugin.util
 
+import java.time.LocalDateTime
+
 import akka.stream.ActorMaterializer
 import akka.stream.KillSwitch
 import akka.stream.KillSwitches
 import akka.stream.SharedKillSwitch
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacv.CanvasFrame
+import org.bytedeco.javacpp.opencv_core
+import org.bytedeco.javacpp.opencv_core.{FONT_HERSHEY_PLAIN, Mat}
+import org.bytedeco.javacpp.opencv_imgproc.putText
+import org.bytedeco.javacv.{CanvasFrame, OpenCVFrameConverter}
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage
+import sentinel.camera.camera.CameraFrame
 import sentinel.camera.camera.stage.ShowImageStage
 import sentinel.plugin.Plugin
 import sentinel.router.messages.{AdvancedPluginStart, PluginStart}
 
 import scala.util.Try
 
-class ShowImage(canvas: CanvasFrame, converter: ToIplImage)
+class ShowImage(canvas: CanvasFrame, converter: ToIplImage, name: String = "")
                (implicit mat: ActorMaterializer)
     extends Plugin
     with LazyLogging {
+
+  val converterToMat = new OpenCVFrameConverter.ToMat()
+  val converterToIpl = new OpenCVFrameConverter.ToIplImage()
 
   var pluginKillSwitch: Option[SharedKillSwitch] = None
 
@@ -32,12 +41,25 @@ class ShowImage(canvas: CanvasFrame, converter: ToIplImage)
 
       logger.info(broadcast.toString)
 
-      val publisher               = broadcast.mat
+      var i = 0
 
-      publisher
+      broadcast.mat
         .via(killSwitch.flow)
         .via(pluginKillSwitch.get.flow)
-        .runWith(new ShowImageStage(canvas, converter))
+        .async
+        .map(f => {
+          val frame: Mat = converterToMat.convert(converterToMat.convert(f.image))
+          val box_text   = "Streamer ====================================="
+          val point      = new opencv_core.Point(50, i)
+          i=i+1
+          val scalar     = new opencv_core.Scalar(0, 255, 0, 2.0)
+          val font       = FONT_HERSHEY_PLAIN
+          putText(frame, box_text, point, font, 1.0, scalar)
+
+          CameraFrame(converterToIpl.convert(converterToIpl.convert(frame)), f.date)
+        })
+        .async
+        .runWith(new ShowImageStage(canvas, converter, name))
 
     }) recover {
       case e: Exception => logger.error(e.getMessage, e)

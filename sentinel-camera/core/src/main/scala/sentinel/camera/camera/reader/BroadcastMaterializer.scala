@@ -45,11 +45,12 @@ class BroadcastMaterializer @Inject()(
   }
 
   private def materalize(broadcast: BroadCastRunnableGraph, promise: Promise[BroadCastRunnableGraph]) =
-    awaitBroadcastStartUp(broadcast, promise)
-//    Try(awaitBroadcastStartUp(broadcast, promise)) recover {
-//      case e: TimeoutException => promise failure e
-//      case e: Exception        => promise failure e
-//    }
+//    awaitBroadcastStartUp(broadcast, promise)
+//    promise success broadcast
+    Try(awaitBroadcastStartUp(broadcast, promise)) recover {
+      case e: TimeoutException => promise failure e
+      case e: Exception        => promise failure e
+    }
 
   private def awaitBroadcastStartUp(broadcast: BroadCastRunnableGraph, promise: Promise[BroadCastRunnableGraph]) = {
     val broadcastStream = broadcast.mat.take(1).runWith(Sink.foreach(f =>{

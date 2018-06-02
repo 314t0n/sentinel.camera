@@ -4,14 +4,14 @@ import akka.stream._
 import akka.stream.stage._
 import com.typesafe.scalalogging.LazyLogging
 import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
-import sentinel.camera.camera.CameraFrame
+import sentinel.camera.camera.{CameraFrame, MotionDetectFrame}
 
 class BackgroundSubstractorStage(backgroundSubstractor: BackgroundSubstractor)
-    extends GraphStage[FlowShape[CameraFrame, CameraFrame]]
+    extends GraphStage[FlowShape[CameraFrame, MotionDetectFrame]]
     with LazyLogging {
 
   private val in  = Inlet[CameraFrame]("MotionDetect.in")
-  private val out = Outlet[CameraFrame]("MotionDetect.out")
+  private val out = Outlet[MotionDetectFrame]("MotionDetect.out")
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
@@ -31,5 +31,5 @@ class BackgroundSubstractorStage(backgroundSubstractor: BackgroundSubstractor)
       })
     }
 
-  override def shape: FlowShape[CameraFrame, CameraFrame] = FlowShape.of(in, out)
+  override def shape: FlowShape[CameraFrame, MotionDetectFrame] = FlowShape.of(in, out)
 }

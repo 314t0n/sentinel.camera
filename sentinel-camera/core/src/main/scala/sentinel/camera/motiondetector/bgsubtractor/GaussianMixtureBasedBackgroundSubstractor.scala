@@ -3,7 +3,10 @@ package sentinel.camera.motiondetector.bgsubtractor
 import com.typesafe.scalalogging.LazyLogging
 import org.bytedeco.javacpp.opencv_core._
 import org.bytedeco.javacpp.opencv_video.BackgroundSubtractorMOG2
+import org.bytedeco.javacpp.opencv_video.createBackgroundSubtractorMOG2
+import org.bytedeco.javacv.OpenCVFrameConverter
 import sentinel.camera.camera.CameraFrame
+import sentinel.camera.camera.MotionDetectFrame
 @deprecated
 object GaussianMixtureBasedBackgroundSubstractor {
   @deprecated
@@ -22,36 +25,22 @@ class GaussianMixtureBasedBackgroundSubstractor(backgroundSubtractorMOG2: Backgr
     extends BackgroundSubstractor
     with LazyLogging {
 
-  //  private val backgroundSubtractorMOG2: BackgroundSubtractorMOG2 =
-  //    createBackgroundSubtractorMOG2(lengthOfHistory, threshold, shadowDetect)
-  //  private val learningRate = 1.0 / lengthOfHistory
   private val mask: Mat = new Mat()
-  //
-  //  def grayFilter(frame: Mat): Mat = {
-  //    val grayFrame = new Mat()
-  //    extractChannel(frame, grayFrame, 0)
-  //    grayFrame
-  //  }
 
   private def applyMask(source: IplImage): IplImage = {
-    val nnn = org.bytedeco.javacpp.opencv_core.cvCloneImage(source)
-    val currentFrame = new Mat(nnn)
+//    val nnn          = org.bytedeco.javacpp.opencv_core.cvCloneImage(source)
+//    val currentFrame = new Mat(nnn)
+    val currentFrame = new Mat(source)
     backgroundSubtractorMOG2.apply(currentFrame, mask, learningRate)
-    val maskedImage = new IplImage(mask)
+    val converter   = new OpenCVFrameConverter.ToIplImage()
+    val maskedImage = converter.convert(converter.convert(mask))
+//    val maskedImage = new IplImage(mask)
     currentFrame.release()
     maskedImage
   }
 
-  //  private val structuringElement: Mat = getStructuringElement(MORPH_RECT, new Size(5, 5)) // todo parameter
-  //
-  //  def edgeFilter(frame: Mat): Mat = {
-  //    val destionationFrame = new Mat(frame.rows(), frame.cols(), frame.`type`())
-  //    morphologyEx(frame, destionationFrame, MORPH_OPEN, structuringElement)
-  //    destionationFrame
-  //  }
-
-  override def substractBackground(frame: CameraFrame): CameraFrame = CameraFrame(applyMask(frame.image))
-
+  override def substractBackground(frame: CameraFrame): MotionDetectFrame =
+    MotionDetectFrame(masked = applyMask(frame.image), originalFrame = frame)
 
   override def close(): Unit = {
     backgroundSubtractorMOG2.close()

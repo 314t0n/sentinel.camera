@@ -5,16 +5,18 @@ import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.util.Arrays;
 
 import static org.bytedeco.javacpp.avutil.AV_PIX_FMT_BGR24;
 import static org.bytedeco.javacpp.opencv_core.cvReleaseData;
-import static org.bytedeco.javacpp.opencv_imgcodecs.CV_IMWRITE_JPEG_QUALITY;
+import static org.bytedeco.javacpp.opencv_core.sub8s;
 import static org.bytedeco.javacpp.opencv_imgcodecs.cvEncodeImage;
 
-public class VideoStream {
+public class CameraStream {
 
     FFmpegFrameGrabber grabber;
     FileInputStream fis; //video file
@@ -23,63 +25,47 @@ public class VideoStream {
     //-----------------------------------
     //constructor
     //-----------------------------------
-    public VideoStream(String filename) throws Exception {
-
+    public CameraStream(int frameRate) throws Exception {
         //init variables
 
         grabber = new FFmpegFrameGrabber("video=Trust Webcam");
         grabber.setFormat("dshow");
-        grabber.setFrameRate(5);
-        grabber.setNumBuffers(5);
+
+//        grabber = new FFmpegFrameGrabber("/dev/video0");
+//        grabber.setFormat("video4linux2");
+
+        grabber.setImageWidth(640);
+        grabber.setImageHeight(480);
+        grabber.setFrameRate(frameRate);
+        grabber.setNumBuffers(frameRate);
         grabber.setPixelFormat(AV_PIX_FMT_BGR24);
         grabber.start();
         frame_nb = 0;
     }
 
-    OpenCVFrameConverter.ToMat converterToMat = new OpenCVFrameConverter.ToMat();
     OpenCVFrameConverter.ToIplImage converterToIplImage = new OpenCVFrameConverter.ToIplImage();
 
-
-    public static void main(String... args) {
+    public void stop() {
         try {
-            VideoStream vs = new VideoStream("fosot0");
-            int i = 10;
-            while (i > 0) {
-                i--;
-                vs.getnextframe(new byte[1]);
-                Thread.sleep(50);
-            }
+            grabber.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     //-----------------------------------
     // getnextframe
     //returns the next frame as an array of byte and the size of the frame
     //-----------------------------------
     public int getnextframe(byte[] frame) throws Exception {
-        int length = 0;
-        String length_string;
-//        byte[] frame_length = new byte[5];
-
-        //read current frame length
-//        fis.read(frame_length,0,5);
-
-        Frame frame1 = grabber.grab();
-
-        opencv_core.Mat mat = converterToMat.convert(frame1);
-        opencv_core.IplImage image = converterToIplImage.convert(frame1);
+        opencv_core.IplImage image = converterToIplImage.convert(grabber.grab());
 
         byte[] frame_length = toBytes(image, ".jpg");
 
-        System.out.println(frame_length.length);
+        System.arraycopy(frame_length, 0, frame, 0, frame_length.length);
 
-        //transform frame_length to integer
-//        length_string = new String(frame_length);
-//        length = Integer.parseInt(length_string);
-
-        return 1;
+        return frame_length.length;
     }
 
     public byte[] toBytes(opencv_core.IplImage image, String format) {

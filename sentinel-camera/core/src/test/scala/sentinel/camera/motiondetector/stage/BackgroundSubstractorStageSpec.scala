@@ -10,7 +10,7 @@ import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, OneInstancePerTest, WordSpecLike}
 import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
-import sentinel.camera.camera.CameraFrame
+import sentinel.camera.camera.{CameraFrame, MotionDetectFrame}
 import testutils.StopSystemAfterAll
 import testutils.TestSystem.TestActorSystem
 
@@ -25,6 +25,7 @@ class BackgroundSubstractorStageSpec extends TestKit(ActorSystem(TestActorSystem
 
   private val backgroundSubstractor = mock[BackgroundSubstractor]
   private val cameraFrame = mock[CameraFrame]
+  private val backgroundSubstractedFrame = mock[MotionDetectFrame]
 
   private val underTest = new BackgroundSubstractorStage(backgroundSubstractor)
 
@@ -35,7 +36,7 @@ class BackgroundSubstractorStageSpec extends TestKit(ActorSystem(TestActorSystem
   "A BackgroundSubstractorStage" should {
 
     "call dependencies properly" in {
-      when(backgroundSubstractor.substractBackground(cameraFrame)).thenReturn(cameraFrame)
+      when(backgroundSubstractor.substractBackground(cameraFrame)).thenReturn(backgroundSubstractedFrame)
       val upstream: TestPublisher.Probe[CameraFrame] = createFlow
 
       upstream.sendNext(cameraFrame)

@@ -3,21 +3,19 @@ package sentinel
 import java.awt.event.WindowAdapter
 import javax.swing.JFrame.EXIT_ON_CLOSE
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import akka.stream.ActorMaterializerSettings
+import akka.actor.{ActorRef, ActorSystem}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import com.google.inject.Key
+import com.google.inject.name.Names
 import com.typesafe.scalalogging.LazyLogging
-import org.bytedeco.javacv.CanvasFrame
-import org.bytedeco.javacv.OpenCVFrameConverter
+import org.bytedeco.javacv.{CanvasFrame, OpenCVFrameConverter}
 import sentinel.app.Orchestator
-import sentinel.camera.motiondetector.bgsubtractor.BackgroundSubstractor
 import sentinel.camera.motiondetector.bgsubtractor.GaussianMixtureBasedBackgroundSubstractor
-import sentinel.camera.motiondetector.plugin.MotionDetectorPlugin
+import sentinel.camera.motiondetector.plugin.{MotionDetectorPlugin, StreamerPlugin}
 import sentinel.plugin.util.ShowImage
 import sentinel.system.module.ModuleInjector
 
-import scala.concurrent.Await
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 object POCApp extends App with LazyLogging {
@@ -38,6 +36,7 @@ object POCApp extends App with LazyLogging {
   private val modules               = new ModuleInjector(system, materializer)
   private val orchestator           = modules.injector.getInstance(classOf[Orchestator])
   private val backgroundSubstractor = modules.injector.getInstance(classOf[GaussianMixtureBasedBackgroundSubstractor])
+  private val notifier: ActorRef    = modules.injector.getInstance(Key.get(classOf[ActorRef], Names.named("Notifier")))
 
   lazy val shutdown: Unit = {
     logger.info(s"Sentinel camera view shutdown.")
@@ -45,19 +44,24 @@ object POCApp extends App with LazyLogging {
     materializer.shutdown()
   }
 
-  val converter  = () => new OpenCVFrameConverter.ToIplImage()
-  val converter2 = () => new OpenCVFrameConverter.ToMat()
+  val iplConverter  = () => new OpenCVFrameConverter.ToIplImage()
+  val matConverter = () => new OpenCVFrameConverter.ToMat()
   val canvas     = createCanvas(shutdown)
-  val canvasMD   = createCanvas(shutdown)
+//  val canvasMD   = createCanvas(shutdown)
 
   startStreaming(orchestator)
 
   sleep(6000) // nice :(
 
-  val showImagePlugin = new ShowImage(canvas, converter())(materializer)
+  val showImagePlugin = new ShowImage(canvas, iplConverter(), "normal")(materializer)
+  val motionDetect =
+  new MotionDetectorPlugin(null, iplConverter(),
+      matConverter(), backgroundSubstractor, "motion", notifier)(
+      materializer)
+  val streamerPlugin = new StreamerPlugin(notifier)
+//  orchestator.addPlugin(streamerPlugin)
   orchestator.addPlugin(showImagePlugin)
-  val motionDetect = new MotionDetectorPlugin(canvasMD, converter(), converter2(), backgroundSubstractor)(materializer)
-  orchestator.addPlugin(motionDetect)
+  //  orchestator.addPlugin(motionDetect)
   sys.addShutdownHook(shutdown)
 
   private def startStreaming(buncher: Orchestator) = {

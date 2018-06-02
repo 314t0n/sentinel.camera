@@ -4,15 +4,14 @@ import java.util.concurrent.TimeoutException
 
 import akka.Done
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.RunnableGraph
-import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.{RunnableGraph, Sink}
 import sentinel.camera.camera.graph.CameraReaderGraph.CameraSource
 
 import scala.concurrent.Future
 
 case class BroadCastRunnableGraph(graph: RunnableGraph[CameraSource])(implicit val materializer: ActorMaterializer) {
 
-  lazy val mat = graph.run()
+  lazy val mat: CameraSource = graph.run()
 
   @throws[TimeoutException]
   def toFuture(): Future[Done] =

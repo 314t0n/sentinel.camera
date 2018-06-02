@@ -10,8 +10,7 @@ import sentinel.alertservice.module.AlertServiceModule
 import sentinel.alertservice.serialization.AlertMessageBodyReader
 import sentinel.app.communication.AlertMessage
 
-class AlertServiceServer() extends HttpServer {
-
+class AlertServiceServer extends HttpServer {
   override val modules = Seq(AlertServiceModule)
 
   override val defaultFinatraHttpPort: String = ":8080"
