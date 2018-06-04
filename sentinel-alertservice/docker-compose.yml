@@ -1,0 +1,6 @@
+services:
+  alertservice:
+    container_name: alertservice
+    image: alertservice:latest
+    ports: ['8080:8080', '9990:9990']
+version: '2'
