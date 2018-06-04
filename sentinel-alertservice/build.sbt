@@ -1,3 +1,8 @@
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerBaseImage
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerCommands
+import com.typesafe.sbt.packager.docker.Cmd
+import com.typesafe.sbt.packager.docker.DockerAlias
+
 lazy val akkaVersion = "2.5.4"
 
 lazy val finatraVersion = "18.4.0"
@@ -58,17 +63,32 @@ lazy val `sentinel-protobuf` = (project in file("sentinel-protobuf"))
   .settings(
     PB.targets in Compile += scalapb.gen(flatPackage = true) -> (sourceManaged in Compile).value
   )
+  .settings(exportJars := true)
+
+lazy val dockerSettings = Seq(
+  dockerExposedPorts := Seq(8080, 9990),
+  dockerAlias := DockerAlias(dockerRepository.value, None, "alertservice", Some((version in Docker).value)),
+  dockerBaseImage := "anapsix/alpine-java",
+  version in Docker := version.value,
+  dockerUpdateLatest := true,
+  packageName in Docker := "alertservice",
+  maintainer in Docker := "",
+  dockerCommands += Cmd("USER", "root"),
+  dockerCommands += Cmd("RUN", "apk add --no-cache bash")
+)
 
 lazy val root = Project(id = "sentinel-alertservice", base = file("."))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= commonDependencies)
-  .aggregate(web, client, `acceptance-tests`, `sentinel-protobuf`)
-  .dependsOn(web)
+  .aggregate(web, `sentinel-protobuf`)
 
 lazy val web = (project in file("web"))
   .settings(commonSettings ++ Seq(name := "sentinel-alertservice-web"))
   .settings(libraryDependencies ++= commonDependencies)
-  .dependsOn(`sentinel-protobuf`)
+  .settings(mainClass in Compile := Some("sentinel.Application"))
+  .settings(dockerSettings)
+  .dependsOn(`sentinel-protobuf` % "compile->compile;test->test")
+  .enablePlugins(JavaAppPackaging)
 
 lazy val client = (project in file("client"))
   .settings(commonSettings ++ Seq(name := "sentinel-alertservice-client"))
@@ -78,4 +98,4 @@ lazy val client = (project in file("client"))
 lazy val `acceptance-tests` = (project in file("acceptance-tests"))
   .settings(commonSettings ++ Seq(name := "sentinel-alertservice-acceptance-tests"))
   .settings(libraryDependencies ++= commonDependencies ++ acTestDependencies)
-  .dependsOn(web % "test->test", client, `sentinel-protobuf`)
+  .dependsOn(web % "compile->compile;test->test", client, `sentinel-protobuf`)
