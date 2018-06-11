@@ -9,7 +9,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
-import sentinel.alertservice.AlertServiceSpec
+import sentinel.alertservice.AlertServiceServerSpec
 import sentinel.alertservice.database.DataStore.DataStoreErrorResponse
 import sentinel.alertservice.database.DataStore.DataStoreOkResponse
 import sentinel.alertservice.database.minio.MinioClientProvider
@@ -17,7 +17,7 @@ import sentinel.alertservice.database.minio.MinioDataStore
 import sentinel.alertservice.database.minio.MinioDataStore.JPEG
 import sentinel.alertservice.fixture.AlertMessageFixture
 
-class MinioDataStoreSpec extends AlertServiceSpec with ScalaFutures with AlertMessageFixture {
+class MinioDataStoreServerSpec extends AlertServiceServerSpec with ScalaFutures with AlertMessageFixture {
 
   private val minioClientProvider = mock[MinioClientProvider]
   private val minioClient         = mock[MinioClient]

@@ -1,17 +1,15 @@
 package sentinel.alertservice.module
 
-import com.google.inject.{Provides, Singleton}
+import com.google.inject.Provides
+import com.google.inject.Singleton
 import com.twitter.inject.TwitterModule
 import com.typesafe.config.ConfigFactory
 import sentinel.alertservice.database.DataStore
-import sentinel.alertservice.database.minio.{MinioClientProvider, MinioDataStoreProvider}
+import sentinel.alertservice.database.minio.MinioClientProvider
+import sentinel.alertservice.database.minio.MinioDataStoreProvider
 import sentinel.alertservice.server.AlertServiceConfig
 
 object DataStoreModule extends TwitterModule {
-
-  @Singleton
-  @Provides
-  private val alertServiceConfig = new AlertServiceConfig(ConfigFactory.load())
 
   @Singleton
   @Provides
@@ -21,6 +19,9 @@ object DataStoreModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def dataStore: DataStore = minioDataStoreProvider.get
+  def alertServiceConfig: AlertServiceConfig = new AlertServiceConfig(ConfigFactory.load())
 
+  @Singleton
+  @Provides
+  def dataStore: DataStore = minioDataStoreProvider.get()
 }

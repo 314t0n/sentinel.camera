@@ -1,45 +1,46 @@
 package sentinel.alertservice.util
 
-import org.scalatest.AsyncWordSpec
+import org.scalatest.WordSpec
 import org.scalatest.Matchers
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import sentinel.alertservice.util.FutureRetry._
 import sentinel.alertservice.util.Retry._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-class FutureRetrySpec extends AsyncWordSpec with MockitoSugar with Matchers {
+class FutureRetrySpec extends WordSpec with MockitoSugar with Matchers with ScalaFutures {
 
   "FutureRetry" should {
 
     "call future exactly the given times" in {
-      val retryTimes  = 10
+      val retryTimes = 10
+
       var timeCounter = 0
       def mockFuture = Future {
         timeCounter = timeCounter + 1
         retryTimes
       }
 
-      val futureRes = retry(retryTimes)(mockFuture)
+      val result = retry(retryTimes)(mockFuture).futureValue
 
-      futureRes.map(result => {
-        result shouldBe retryTimes
-        timeCounter shouldBe 1
-      })
+      result shouldBe retryTimes
+      timeCounter shouldBe 1
     }
 
     "retry everytime future fails" in {
       val retryTimes  = 10
-      var timeCounter = retryTimes
+      var timeCounter = retryTimes + 1
       def mockFuture = Future {
         timeCounter = timeCounter - 1
         if (timeCounter > 0) throw new RuntimeException
         retryTimes
       }
 
-      val futureRes = retry(retryTimes)(mockFuture)
+      val result = retry(retryTimes)(mockFuture).futureValue
 
-      futureRes.map(_ => timeCounter shouldBe 0)
+      timeCounter shouldBe 0
     }
 
     "short circuit" in {
@@ -52,9 +53,9 @@ class FutureRetrySpec extends AsyncWordSpec with MockitoSugar with Matchers {
         retryTimes
       }
 
-      val futureRes = retry(retryTimes)(mockFuture)
+      val result = retry(retryTimes)(mockFuture).futureValue
 
-      futureRes.map(_ => timeCounter shouldBe maxRetries)
+      timeCounter shouldBe maxRetries
     }
   }
 }
